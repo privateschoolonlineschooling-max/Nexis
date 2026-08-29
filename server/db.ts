@@ -456,7 +456,7 @@ class Database {
     communityId?: string; 
     authorId?: string; 
     tag?: string; 
-    feedType?: 'for-you' | 'following' | 'explore' | 'announcements';
+    feedType?: 'for-you' | 'following' | 'explore' | 'announcements' | 'joined-communities';
     currentUserId?: string;
   }): Post[] {
     let posts = [...this.data.posts];
@@ -480,6 +480,11 @@ class Database {
       if (user) {
         posts = posts.filter(p => user.following.includes(p.authorId) || p.authorId === params.currentUserId);
       }
+    } else if (params?.feedType === 'joined-communities' && params.currentUserId) {
+      const joinedCommIds = this.data.communities
+        .filter(c => c.members?.some(m => m.userId === params.currentUserId))
+        .map(c => c.id);
+      posts = posts.filter(p => p.communityId && joinedCommIds.includes(p.communityId));
     }
 
     // Sort by createdAt descending, pinned first
@@ -1191,8 +1196,8 @@ class Database {
 
   // --- GLOBAL SEARCH ---
   globalSearch(query: string) {
-    const q = query.toLowerCase().trim();
-    if (!q) {
+    const raw = (query || '').trim();
+    if (!raw) {
       return {
         users: [],
         communities: [],
@@ -1202,35 +1207,89 @@ class Database {
       };
     }
 
-    const matchedUsers = this.getUsers().filter(u => 
-      u.username.toLowerCase().includes(q) || 
-      u.displayName.toLowerCase().includes(q) || 
-      u.bio?.toLowerCase().includes(q) ||
-      u.location?.toLowerCase().includes(q)
-    );
+    const q = raw.toLowerCase();
+    const cleanQ = q.startsWith('@') ? q.slice(1).trim() : (q.startsWith('#') ? q.slice(1).trim() : (q.startsWith('c/') ? q.slice(2).trim() : q));
+
+    const matchedUsers = this.getUsers().filter(u => {
+      const uName = u.username.toLowerCase();
+      const dName = u.displayName.toLowerCase();
+      const bioText = (u.bio || '').toLowerCase();
+      const locText = (u.location || '').toLowerCase();
+
+      return (
+        uName.includes(cleanQ) ||
+        uName.includes(q) ||
+        dName.includes(cleanQ) ||
+        dName.includes(q) ||
+        bioText.includes(cleanQ) ||
+        locText.includes(cleanQ)
+      );
+    }).sort((a, b) => {
+      const aUser = a.username.toLowerCase();
+      const bUser = b.username.toLowerCase();
+
+      // Exact match first
+      if (aUser === cleanQ && bUser !== cleanQ) return -1;
+      if (bUser === cleanQ && aUser !== cleanQ) return 1;
+
+      // Prefix match second
+      const aStarts = aUser.startsWith(cleanQ);
+      const bStarts = bUser.startsWith(cleanQ);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+
+      // Follower count / verified
+      if (a.isVerified !== b.isVerified) return a.isVerified ? -1 : 1;
+      return (b.followersCount || 0) - (a.followersCount || 0);
+    });
 
     const verifiedAccounts = matchedUsers.filter(u => u.isVerified);
 
-    const matchedCommunities = this.data.communities.filter(c => 
-      c.name.toLowerCase().includes(q) || 
-      c.slug.toLowerCase().includes(q) || 
-      c.description.toLowerCase().includes(q) ||
-      c.tags.some(t => t.toLowerCase().includes(q))
-    );
+    const matchedCommunities = this.data.communities.filter(c => {
+      const cName = c.name.toLowerCase();
+      const cSlug = c.slug.toLowerCase();
+      const cDesc = c.description.toLowerCase();
+      return (
+        cName.includes(cleanQ) ||
+        cSlug.includes(cleanQ) ||
+        cDesc.includes(cleanQ) ||
+        c.tags.some(t => t.toLowerCase().includes(cleanQ) || t.toLowerCase().includes(q))
+      );
+    });
 
-    const matchedPosts = this.data.posts.filter(p => 
-      p.content.toLowerCase().includes(q) || 
-      p.title?.toLowerCase().includes(q) ||
-      p.tags.some(t => t.toLowerCase().includes(q)) ||
-      p.authorDisplayName.toLowerCase().includes(q)
-    );
+    const matchedPosts = this.data.posts.filter(p => {
+      const pContent = p.content.toLowerCase();
+      const pTitle = (p.title || '').toLowerCase();
+      const pAuthor = p.authorDisplayName.toLowerCase();
+      const pAuthorUser = (p.authorUsername || '').toLowerCase();
+      return (
+        pContent.includes(q) ||
+        pContent.includes(cleanQ) ||
+        pTitle.includes(q) ||
+        pTitle.includes(cleanQ) ||
+        p.tags.some(t => t.toLowerCase().includes(cleanQ) || t.toLowerCase().includes(q)) ||
+        pAuthor.includes(cleanQ) ||
+        pAuthorUser.includes(cleanQ)
+      );
+    });
 
-    const matchedListings = this.data.listings.filter(l => 
-      l.title.toLowerCase().includes(q) || 
-      l.description.toLowerCase().includes(q) || 
-      l.category.toLowerCase().includes(q) ||
-      l.location.toLowerCase().includes(q)
-    );
+    const matchedListings = this.data.listings.filter(l => {
+      const lTitle = l.title.toLowerCase();
+      const lDesc = l.description.toLowerCase();
+      const lCat = l.category.toLowerCase();
+      const lLoc = l.location.toLowerCase();
+      const lSeller = (l.sellerDisplayName || '').toLowerCase();
+      const lSellerUser = (l.sellerUsername || '').toLowerCase();
+      return (
+        lTitle.includes(cleanQ) ||
+        lTitle.includes(q) ||
+        lDesc.includes(cleanQ) ||
+        lCat.includes(cleanQ) ||
+        lLoc.includes(cleanQ) ||
+        lSeller.includes(cleanQ) ||
+        lSellerUser.includes(cleanQ)
+      );
+    });
 
     return {
       users: matchedUsers,

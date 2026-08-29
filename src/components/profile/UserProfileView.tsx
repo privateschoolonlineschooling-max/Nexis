@@ -367,12 +367,22 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
 
         <button
           onClick={() => setTab('marketplace')}
-          className={`pb-3 text-xs font-semibold uppercase tracking-wider transition flex items-center gap-2 ${
+          className={`pb-3 text-xs font-semibold uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
             tab === 'marketplace' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600' : 'text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200'
           }`}
         >
           <ShoppingBag className="w-4 h-4" />
           <span>Storefront & Items ({listings.length})</span>
+        </button>
+
+        <button
+          onClick={() => setTab('communities')}
+          className={`pb-3 text-xs font-semibold uppercase tracking-wider transition flex items-center gap-2 cursor-pointer ${
+            tab === 'communities' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600' : 'text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>Joined Communities ({communities.filter(c => c.members?.some(m => m.userId === profileUser.id)).length})</span>
         </button>
       </div>
 
@@ -416,6 +426,51 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {tab === 'communities' && (
+        <div>
+          {(() => {
+            const userJoined = communities.filter(c => c.members?.some(m => m.userId === profileUser.id));
+            if (userJoined.length === 0) {
+              return (
+                <div className="py-12 text-center p-8 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl text-xs text-gray-500 dark:text-neutral-400 shadow-sm">
+                  {isSelf ? "You haven't joined any communities yet." : `${profileUser.displayName} hasn't joined any public communities.`}
+                </div>
+              );
+            }
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {userJoined.map(c => (
+                  <div
+                    key={c.id}
+                    onClick={() => onSelectCommunity(c.slug)}
+                    className="p-4 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 hover:border-gray-300 dark:hover:border-neutral-700 rounded-2xl cursor-pointer transition flex items-center gap-3.5 group shadow-sm"
+                  >
+                    <img
+                      src={c.avatar}
+                      alt={c.name}
+                      className="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-neutral-700 shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1">
+                        <h4 className="text-xs font-bold text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          {c.name}
+                        </h4>
+                        {c.isVerified && <VerifiedBadge size="sm" type="organization" />}
+                      </div>
+                      <span className="text-[10px] text-gray-400 font-mono block">c/{c.slug}</span>
+                      <span className="text-[11px] text-gray-500 dark:text-neutral-400 block mt-0.5">
+                        {c.memberCount.toLocaleString()} members
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       )}
 

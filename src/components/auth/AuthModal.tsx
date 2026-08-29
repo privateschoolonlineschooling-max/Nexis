@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { User, Lock, Mail, AtSign, UserCheck, Shield, X, Sparkles, ArrowRight } from 'lucide-react';
-import { VerifiedBadge } from '../common/VerifiedBadge';
+import { Lock, Mail, AtSign, X } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialTab?: 'login' | 'register' | 'personas';
+  initialTab?: 'login' | 'register';
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -15,10 +14,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   initialTab = 'login'
 }) => {
-  const { login, loginWithGoogle, register, switchUser, allUsers, currentUser } = useAuth();
+  const { login, loginWithGoogle, register } = useAuth();
   const { showToast } = useNotifications();
 
-  const [tab, setTab] = useState<'login' | 'register' | 'forgot' | 'personas'>(initialTab);
+  const [tab, setTab] = useState<'login' | 'register' | 'forgot'>(initialTab);
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -70,19 +69,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleSwitchPersona = async (userId: string) => {
-    try {
-      setLoading(true);
-      await switchUser(userId);
-      showToast('Switched persona session', 'info');
-      onClose();
-    } catch (err: any) {
-      showToast(err.message || 'Failed to switch user', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div
       id="auth-modal-overlay"
@@ -101,7 +87,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </button>
 
         {/* Tab Headers */}
-        <div className="flex border-b border-gray-200 dark:border-neutral-800 mb-6 gap-2">
+        <div className="flex border-b border-gray-200 dark:border-neutral-800 mb-6 gap-6">
           <button
             onClick={() => setTab('login')}
             className={`pb-3 text-xs font-semibold uppercase tracking-wider transition ${
@@ -121,17 +107,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }`}
           >
             Register
-          </button>
-          <button
-            onClick={() => setTab('personas')}
-            className={`pb-3 text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 ${
-              tab === 'personas'
-                ? 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-500'
-                : 'text-gray-400 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Switch Persona</span>
           </button>
         </div>
 
@@ -187,7 +162,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     required
                     value={usernameOrEmail}
                     onChange={(e) => setUsernameOrEmail(e.target.value)}
-                    placeholder="alex_rivers or alex@nexis.community"
+                    placeholder="username or email@example.com"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -226,19 +201,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               >
                 {loading ? 'Authenticating...' : 'Sign In'}
               </button>
-
-              <div className="text-center pt-2">
-                <span className="text-xs text-gray-500 dark:text-neutral-400">
-                  Want to test staff moderation or seller tools?{' '}
-                  <button
-                    type="button"
-                    onClick={() => setTab('personas')}
-                    className="text-amber-600 dark:text-amber-400 hover:underline font-medium cursor-pointer"
-                  >
-                    Switch Demo Account
-                  </button>
-                </span>
-              </div>
             </form>
           </div>
         )}
@@ -364,7 +326,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="space-y-4">
             <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Reset Password</h4>
             <p className="text-xs text-gray-500 dark:text-neutral-400">
-              Enter your email address and we'll immediately verify identity credentials to reset your password.
+              Enter your email address and we'll immediately send instructions to reset your password.
             </p>
             <div>
               <label className="text-xs font-medium text-gray-700 dark:text-neutral-300 block mb-1">
@@ -372,82 +334,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </label>
               <input
                 type="email"
-                placeholder="alex@nexis.community"
+                placeholder="user@example.com"
                 className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <button
               type="button"
               onClick={() => {
-                showToast('Password reset link simulated & sent', 'info');
+                showToast('Password reset link sent', 'info');
                 setTab('login');
               }}
               className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition shadow-sm"
             >
               Send Reset Code
             </button>
-          </div>
-        )}
-
-        {tab === 'personas' && (
-          <div className="space-y-3">
-            <div className="p-3 bg-gray-50 dark:bg-neutral-950 rounded-xl border border-gray-200 dark:border-neutral-800 text-xs text-gray-700 dark:text-neutral-300">
-              <p className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1.5 mb-1">
-                <Sparkles className="w-3.5 h-3.5" /> Instant Role & Persona Switcher
-              </p>
-              Switch seamlessly between verified creators, artisan sellers, community organizers, and staff moderators to inspect multi-tier workflows.
-            </div>
-
-            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-              {allUsers.map((u) => {
-                const isSelected = currentUser?.id === u.id;
-                const isMod = u.role === 'admin' || u.role === 'moderator';
-
-                return (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => handleSwitchPersona(u.id)}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition ${
-                      isSelected
-                        ? 'bg-blue-50 dark:bg-blue-600/15 border-blue-500/50 text-blue-900 dark:text-white'
-                        : 'bg-white dark:bg-neutral-800/40 border-gray-200 dark:border-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-800/80 text-gray-800 dark:text-neutral-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img
-                        src={u.avatar}
-                        alt={u.displayName}
-                        className="w-9 h-9 rounded-full object-cover shrink-0 border border-gray-200 dark:border-neutral-700"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold truncate">{u.displayName}</span>
-                          {u.isVerified && <VerifiedBadge size="sm" type={u.role === 'admin' ? 'organization' : 'user'} />}
-                        </div>
-                        <div className="text-[11px] text-gray-500 dark:text-neutral-400 truncate">
-                          @{u.username} • <span className="capitalize text-blue-600 dark:text-blue-400">{u.role}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {isMod && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30">
-                          Staff
-                        </span>
-                      )}
-                      {isSelected ? (
-                        <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      ) : (
-                        <ArrowRight className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
           </div>
         )}
       </div>

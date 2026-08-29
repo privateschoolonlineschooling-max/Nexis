@@ -95,42 +95,48 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         </div>
 
         <div className="space-y-3.5">
-          {(communities || []).slice(0, 4).map((c) => (
-            <div
-              key={c.id}
-              className="w-full flex items-center justify-between gap-3 group"
-            >
-              <button
-                onClick={() => onSelectCommunity(c.slug)}
-                className="flex items-center gap-2.5 min-w-0 text-left cursor-pointer"
+          {(!communities || communities.length === 0) ? (
+            <p className="text-xs text-gray-500 dark:text-neutral-400 py-1">
+              No communities yet. Create one to get started!
+            </p>
+          ) : (
+            communities.slice(0, 4).map((c) => (
+              <div
+                key={c.id}
+                className="w-full flex items-center justify-between gap-3 group"
               >
-                <img
-                  src={c.avatar}
-                  alt={c.name}
-                  className="w-8 h-8 rounded-xl object-cover shrink-0 border border-gray-100 dark:border-neutral-800"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition truncate">
-                      {c.name}
+                <button
+                  onClick={() => onSelectCommunity(c.slug)}
+                  className="flex items-center gap-2.5 min-w-0 text-left cursor-pointer"
+                >
+                  <img
+                    src={c.avatar}
+                    alt={c.name}
+                    className="w-8 h-8 rounded-xl object-cover shrink-0 border border-gray-100 dark:border-neutral-800"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition truncate">
+                        {c.name}
+                      </span>
+                      {c.isVerified && <VerifiedBadge size="sm" type="organization" />}
+                    </div>
+                    <span className="text-[11px] text-gray-500 dark:text-neutral-400">
+                      {(c.memberCount || 0).toLocaleString()} members
                     </span>
-                    {c.isVerified && <VerifiedBadge size="sm" type="organization" />}
                   </div>
-                  <span className="text-[11px] text-gray-500 dark:text-neutral-400">
-                    {(c.memberCount || 0).toLocaleString()} members
-                  </span>
-                </div>
-              </button>
+                </button>
 
-              <button
-                onClick={() => onSelectCommunity(c.slug)}
-                className="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg text-xs font-bold text-gray-700 dark:text-neutral-300 shrink-0 transition cursor-pointer"
-              >
-                Join
-              </button>
-            </div>
-          ))}
+                <button
+                  onClick={() => onSelectCommunity(c.slug)}
+                  className="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg text-xs font-bold text-gray-700 dark:text-neutral-300 shrink-0 transition cursor-pointer"
+                >
+                  Join
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -142,48 +148,54 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         </div>
 
         <div className="space-y-3.5">
-          {(verifiedList || []).slice(0, 3).map((u) => {
-            const isFollowing = currentUser?.following?.includes(u.id);
-            const isSelf = currentUser?.id === u.id;
+          {(!verifiedList || verifiedList.length === 0) ? (
+            <p className="text-xs text-gray-500 dark:text-neutral-400 py-1">
+              Apply for verification to be spotlighted here.
+            </p>
+          ) : (
+            verifiedList.slice(0, 3).map((u) => {
+              const isFollowing = currentUser?.following?.includes(u.id);
+              const isSelf = currentUser?.id === u.id;
 
-            return (
-              <div key={u.id} className="flex items-center justify-between gap-2">
-                <button
-                  onClick={() => onSelectUser(u.username)}
-                  className="flex items-center gap-2.5 min-w-0 text-left group cursor-pointer"
-                >
-                  <img
-                    src={u.avatar}
-                    alt={u.displayName}
-                    className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-200 dark:border-neutral-700 group-hover:border-blue-500 transition"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-blue-600 truncate transition">
-                        {u.displayName}
-                      </span>
-                      <VerifiedBadge size="sm" type={u.role === 'admin' ? 'organization' : 'user'} />
-                    </div>
-                    <span className="text-[11px] text-gray-500 dark:text-neutral-400 truncate block">@{u.username}</span>
-                  </div>
-                </button>
-
-                {!isSelf && (
+              return (
+                <div key={u.id} className="flex items-center justify-between gap-2">
                   <button
-                    onClick={() => toggleFollow(u.id)}
-                    className={`px-3 py-1 text-xs font-semibold rounded-lg shrink-0 transition cursor-pointer ${
-                      isFollowing
-                        ? 'bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 hover:bg-gray-200'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
-                    }`}
+                    onClick={() => onSelectUser(u.username)}
+                    className="flex items-center gap-2.5 min-w-0 text-left group cursor-pointer"
                   >
-                    {isFollowing ? 'Following' : 'Follow'}
+                    <img
+                      src={u.avatar}
+                      alt={u.displayName}
+                      className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-200 dark:border-neutral-700 group-hover:border-blue-500 transition"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-blue-600 truncate transition">
+                          {u.displayName}
+                        </span>
+                        <VerifiedBadge size="sm" type={u.role === 'admin' ? 'organization' : 'user'} />
+                      </div>
+                      <span className="text-[11px] text-gray-500 dark:text-neutral-400 truncate block">@{u.username}</span>
+                    </div>
                   </button>
-                )}
-              </div>
-            );
-          })}
+
+                  {!isSelf && (
+                    <button
+                      onClick={() => toggleFollow(u.id)}
+                      className={`px-3 py-1 text-xs font-semibold rounded-lg shrink-0 transition cursor-pointer ${
+                        isFollowing
+                          ? 'bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 hover:bg-gray-200'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
+                      }`}
+                    >
+                      {isFollowing ? 'Following' : 'Follow'}
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

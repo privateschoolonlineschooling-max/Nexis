@@ -14,7 +14,8 @@ import {
   Search, 
   Image as ImageIcon, 
   BarChart2, 
-  Link as LinkIcon 
+  Link as LinkIcon,
+  Layers
 } from 'lucide-react';
 
 interface FeedViewProps {
@@ -32,7 +33,7 @@ export const FeedView: React.FC<FeedViewProps> = ({
   onClearTag
 }) => {
   const { currentUser } = useAuth();
-  const [feedType, setFeedType] = useState<'for-you' | 'following' | 'announcements' | 'explore'>('for-you');
+  const [feedType, setFeedType] = useState<'for-you' | 'following' | 'joined-communities' | 'announcements' | 'explore'>('for-you');
   const [posts, setPosts] = useState<Post[]>([]);
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -95,7 +96,7 @@ export const FeedView: React.FC<FeedViewProps> = ({
               setFilterTag('');
             }}
             id="feed-tab-following"
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
               feedType === 'following'
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800'
@@ -105,6 +106,25 @@ export const FeedView: React.FC<FeedViewProps> = ({
             <span>Following</span>
           </button>
 
+          {currentUser && (
+            <button
+              onClick={() => {
+                setFeedType('joined-communities');
+                if (onClearTag) onClearTag();
+                setFilterTag('');
+              }}
+              id="feed-tab-joined-communities"
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                feedType === 'joined-communities'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>My Circles</span>
+            </button>
+          )}
+
           <button
             onClick={() => {
               setFeedType('announcements');
@@ -112,7 +132,7 @@ export const FeedView: React.FC<FeedViewProps> = ({
               setFilterTag('');
             }}
             id="feed-tab-announcements"
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
               feedType === 'announcements'
                 ? 'bg-amber-600 text-white shadow-sm'
                 : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800'

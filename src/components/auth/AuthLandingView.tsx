@@ -15,21 +15,19 @@ import {
   ArrowRight, 
   Sun, 
   Moon, 
-  CheckCircle2, 
-  Globe
+  CheckCircle2
 } from 'lucide-react';
-import { VerifiedBadge } from '../common/VerifiedBadge';
 
 interface AuthLandingViewProps {
   onSuccess?: () => void;
 }
 
 export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) => {
-  const { login, loginWithGoogle, register, switchUser, allUsers } = useAuth();
+  const { login, loginWithGoogle, register } = useAuth();
   const { showToast } = useNotifications();
   const { theme, toggleTheme } = useTheme();
 
-  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'personas'>('login');
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -46,23 +44,23 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
 
   // Google Modal Custom Email state
   const [showGoogleCustomModal, setShowGoogleCustomModal] = useState(false);
-  const [customGoogleEmail, setCustomGoogleEmail] = useState('privateschoolonlineschooling@gmail.com');
-  const [customGoogleName, setCustomGoogleName] = useState('Online Schooling');
+  const [customGoogleEmail, setCustomGoogleEmail] = useState('');
+  const [customGoogleName, setCustomGoogleName] = useState('');
 
   const handleGoogleSignIn = async (customEmail?: string, customName?: string) => {
     try {
       setGoogleLoading(true);
-      const email = customEmail || customGoogleEmail || 'privateschoolonlineschooling@gmail.com';
-      const name = customName || customGoogleName || 'Google User';
+      const email = customEmail || customGoogleEmail || undefined;
+      const name = customName || customGoogleName || undefined;
       
       await loginWithGoogle({
-        email: email.trim(),
-        displayName: name.trim(),
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || email)}`,
+        email: email ? email.trim() : undefined,
+        displayName: name ? name.trim() : undefined,
+        avatar: name || email ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || email || 'user')}` : undefined,
         googleId: `google_${Date.now()}`
       });
 
-      showToast(`Signed in with Google as ${email}`, 'success');
+      showToast('Signed in successfully with Google!', 'success');
       setShowGoogleCustomModal(false);
       if (onSuccess) onSuccess();
     } catch (err: any) {
@@ -85,7 +83,7 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
       showToast('Welcome back to Nexis!', 'success');
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      showToast(err.message || 'Invalid credentials. Try switching to a demo persona or use Google Sign-In.', 'error');
+      showToast(err.message || 'Invalid credentials. Please verify your login details and try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -115,19 +113,6 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
       if (onSuccess) onSuccess();
     } catch (err: any) {
       showToast(err.message || 'Registration failed', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSelectPersona = async (userId: string, userName: string) => {
-    try {
-      setLoading(true);
-      await switchUser(userId);
-      showToast(`Logged in as ${userName}`, 'success');
-      if (onSuccess) onSuccess();
-    } catch (err: any) {
-      showToast(err.message || 'Failed to switch user', 'error');
     } finally {
       setLoading(false);
     }
@@ -238,7 +223,7 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
             className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-xl text-gray-900 dark:text-neutral-100"
           >
             {/* Tab Selection */}
-            <div className="flex border-b border-gray-200 dark:border-neutral-800 mb-6 gap-2">
+            <div className="flex border-b border-gray-200 dark:border-neutral-800 mb-6 gap-6">
               <button
                 type="button"
                 onClick={() => setActiveTab('login')}
@@ -261,74 +246,49 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
               >
                 Create Account
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('personas')}
-                className={`pb-3 text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'personas'
-                    ? 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-500'
-                    : 'text-gray-400 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Demo Accounts</span>
-              </button>
             </div>
 
-            {/* Google Sign In Button (Prominently displayed) */}
-            {activeTab !== 'personas' && (
-              <div className="space-y-3 mb-6">
-                <button
-                  type="button"
-                  id="google-signin-btn"
-                  disabled={googleLoading}
-                  onClick={() => handleGoogleSignIn()}
-                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 rounded-xl text-xs font-semibold text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-700/70 shadow-sm transition active:scale-[0.99] disabled:opacity-60 cursor-pointer"
-                >
-                  {googleLoading ? (
-                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <svg className="w-4 h-4" viewBox="0 0 24 24">
-                      <path
-                        fill="#4285F4"
-                        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.36 24 12 24z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.36 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                      />
-                    </svg>
-                  )}
-                  <span>Continue with Google</span>
-                </button>
+            {/* Google Sign In Button */}
+            <div className="space-y-3 mb-6">
+              <button
+                type="button"
+                id="google-signin-btn"
+                disabled={googleLoading}
+                onClick={() => handleGoogleSignIn()}
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 rounded-xl text-xs font-semibold text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-700/70 shadow-sm transition active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+              >
+                {googleLoading ? (
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.36 24 12 24z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.36 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                    />
+                  </svg>
+                )}
+                <span>Continue with Google</span>
+              </button>
 
-                <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-neutral-500 px-1">
-                  <span>Instant 1-click authentication</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowGoogleCustomModal(true)}
-                    className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                  >
-                    Specify Google email
-                  </button>
-                </div>
-
-                <div className="relative flex items-center justify-center my-4">
-                  <div className="border-t border-gray-200 dark:border-neutral-800 w-full" />
-                  <span className="bg-white dark:bg-neutral-900 px-3 text-[11px] font-medium text-gray-400 dark:text-neutral-500 uppercase tracking-wider shrink-0">
-                    or continue with email
-                  </span>
-                </div>
+              <div className="relative flex items-center justify-center my-4">
+                <div className="border-t border-gray-200 dark:border-neutral-800 w-full" />
+                <span className="bg-white dark:bg-neutral-900 px-3 text-[11px] font-medium text-gray-400 dark:text-neutral-500 uppercase tracking-wider shrink-0">
+                  or continue with email
+                </span>
               </div>
-            )}
+            </div>
 
             {/* TAB: LOGIN */}
             {activeTab === 'login' && (
@@ -344,7 +304,7 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
                       required
                       value={loginIdentifier}
                       onChange={(e) => setLoginIdentifier(e.target.value)}
-                      placeholder="alex_rivers or alex@nexis.community"
+                      placeholder="username or email@example.com"
                       className="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -357,7 +317,7 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
                     </label>
                     <button
                       type="button"
-                      onClick={() => showToast('Password reset instructions simulated to your registered email', 'info')}
+                      onClick={() => showToast('Password reset instructions sent to your email', 'info')}
                       className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                     >
                       Forgot?
@@ -384,19 +344,6 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
                   {loading ? 'Authenticating...' : 'Sign In to Nexis'}
                   {!loading && <ArrowRight className="w-4 h-4" />}
                 </button>
-
-                <div className="text-center pt-2">
-                  <span className="text-xs text-gray-500 dark:text-neutral-400">
-                    Want to test without credentials?{' '}
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('personas')}
-                      className="text-amber-600 dark:text-amber-400 hover:underline font-medium cursor-pointer"
-                    >
-                      Pick a Demo Persona
-                    </button>
-                  </span>
-                </div>
               </form>
             )}
 
@@ -431,7 +378,7 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
                       required
                       value={regUsername}
                       onChange={(e) => setRegUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                      placeholder="maya_ceramics"
+                      placeholder="username"
                       className="w-full pl-8 pr-3.5 py-2.5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -448,7 +395,7 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
                       required
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="maya@example.com"
+                      placeholder="user@example.com"
                       className="w-full pl-8 pr-3.5 py-2.5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -494,64 +441,6 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
                 </button>
               </form>
             )}
-
-            {/* TAB: DEMO PERSONAS */}
-            {activeTab === 'personas' && (
-              <div className="space-y-3">
-                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-200">
-                  <p className="font-semibold flex items-center gap-1.5 mb-1 text-amber-700 dark:text-amber-400">
-                    <Sparkles className="w-3.5 h-3.5" /> Instant Test Accounts
-                  </p>
-                  Explore different roles including verified creators, artisan sellers, community organizers, and staff moderators without entering credentials.
-                </div>
-
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {allUsers.map((u) => {
-                    const isMod = u.role === 'admin' || u.role === 'moderator';
-
-                    return (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => handleSelectPersona(u.id, u.displayName)}
-                        className="w-full flex items-center justify-between p-3 rounded-2xl border bg-white dark:bg-neutral-800/40 border-gray-200 dark:border-neutral-800 hover:bg-blue-50/60 dark:hover:bg-neutral-800/90 text-gray-800 dark:text-neutral-200 transition cursor-pointer text-left group"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src={u.avatar}
-                            alt={u.displayName}
-                            className="w-9 h-9 rounded-full object-cover shrink-0 border border-gray-200 dark:border-neutral-700"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-semibold truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
-                                {u.displayName}
-                              </span>
-                              {u.isVerified && (
-                                <VerifiedBadge size="sm" type={u.role === 'admin' ? 'organization' : 'user'} />
-                              )}
-                            </div>
-                            <div className="text-[11px] text-gray-500 dark:text-neutral-400 truncate">
-                              @{u.username} • <span className="capitalize text-blue-600 dark:text-blue-400 font-medium">{u.role}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          {isMod && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30">
-                              Staff
-                            </span>
-                          )}
-                          <ArrowRight className="w-4 h-4 text-gray-400 dark:text-neutral-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition" />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </main>
@@ -583,7 +472,7 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
             </div>
 
             <p className="text-xs text-gray-500 dark:text-neutral-400">
-              Confirm your Google Account credentials to link or create your verified Nexis identity.
+              Confirm your Google Account credentials to link or create your Nexis identity.
             </p>
 
             <div className="space-y-3">

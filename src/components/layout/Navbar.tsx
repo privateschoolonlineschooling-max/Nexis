@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { api } from '../../services/api';
+import { User, Community } from '../../types/index';
 import { 
   Search, 
   Bell, 
@@ -12,12 +14,13 @@ import {
   ShieldCheck, 
   Settings, 
   LogOut, 
-  Sparkles, 
   MessageSquare, 
   ShoppingBag, 
   Users, 
   FileText,
-  CheckCheck
+  CheckCheck,
+  X,
+  ArrowRight
 } from 'lucide-react';
 import { VerifiedBadge } from '../common/VerifiedBadge';
 
@@ -31,6 +34,8 @@ interface NavbarProps {
   openAuthModal: () => void;
   openSettingsModal: () => void;
   onSearch: (query: string) => void;
+  onSelectUser?: (username: string) => void;
+  onSelectCommunity?: (slug: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -42,7 +47,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   openNewDM,
   openAuthModal,
   openSettingsModal,
-  onSearch
+  onSearch,
+  onSelectUser,
+  onSelectCommunity
 }) => {
   const { currentUser, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -52,10 +59,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+
+  // Quick search autocomplete state
+  const [quickResults, setQuickResults] = useState<{ users: User[]; communities: Community[] }>({ users: [], communities: [] });
+  const [isSearchingQuick, setIsSearchingQuick] = useState(false);
+  const [showQuickDropdown, setShowQuickDropdown] = useState(false);
 
   const createMenuRef = useRef<HTMLDivElement>(null);
   const notifMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Close menus on outside click
   useEffect(() => {
@@ -69,16 +83,69 @@ export const Navbar: React.FC<NavbarProps> = ({
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
       }
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowQuickDropdown(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Quick search debounce
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
+      setQuickResults({ users: [], communities: [] });
+      setShowQuickDropdown(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsSearchingQuick(true);
+        const res = await api.searchGlobal(trimmed);
+        setQuickResults({
+          users: (res.results.users || []).slice(0, 5),
+          communities: (res.results.communities || []).slice(0, 3)
+        });
+        setShowQuickDropdown(true);
+      } catch (err) {
+        console.error('Quick search error:', err);
+      } finally {
+        setIsSearchingQuick(false);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setShowQuickDropdown(false);
+      setShowMobileSearch(false);
       onSearch(searchQuery.trim());
       setCurrentView('search');
+    }
+  };
+
+  const handleQuickSelectUser = (username: string) => {
+    setShowQuickDropdown(false);
+    setShowMobileSearch(false);
+    if (onSelectUser) {
+      onSelectUser(username);
+    } else {
+      setCurrentView('profile');
+    }
+  };
+
+  const handleQuickSelectCommunity = (slug: string) => {
+    setShowQuickDropdown(false);
+    setShowMobileSearch(false);
+    if (onSelectCommunity) {
+      onSelectCommunity(slug);
+    } else {
+      setCurrentView('communities');
     }
   };
 
@@ -111,8 +178,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         </div>
 
-        {/* Global Search Bar */}
-        <div className="flex-1 max-w-lg hidden md:block">
+        {/* Global Search Bar (Desktop) */}
+        <div className="flex-1 max-w-lg hidden md:block relative" ref={searchContainerRef}>
           <form onSubmit={handleSearchSubmit} className="relative">
             <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
             <input
@@ -120,14 +187,155 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="global-search-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search communities, items, or people..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-sm text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-neutral-900 transition-all"
+              onFocus={() => {
+                if (searchQuery.trim() && (quickResults.users.length > 0 || quickResults.communities.length > 0)) {
+                  setShowQuickDropdown(true);
+                }
+              }}
+              placeholder="Search people (@username), communities, or items..."
+              className="w-full pl-10 pr-9 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-sm text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-neutral-900 transition-all"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setShowQuickDropdown(false);
+                }}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-200"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </form>
+
+          {/* Quick Autocomplete Search Dropdown */}
+          {showQuickDropdown && searchQuery.trim() && (
+            <div
+              id="quick-search-dropdown"
+              className="absolute left-0 right-0 mt-2 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            >
+              {isSearchingQuick ? (
+                <div className="p-4 text-center text-xs text-gray-400 dark:text-neutral-500">Searching platform...</div>
+              ) : (
+                <div className="max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-neutral-800">
+                  {/* People preview */}
+                  {quickResults.users.length > 0 && (
+                    <div className="p-2">
+                      <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-neutral-500 flex items-center gap-1.5">
+                        <Users className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                        <span>People & Creators</span>
+                      </div>
+                      <div className="space-y-0.5 mt-1">
+                        {quickResults.users.map((u) => (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => handleQuickSelectUser(u.username)}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-blue-50/70 dark:hover:bg-neutral-800/80 transition text-left group"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <img
+                                src={u.avatar}
+                                alt={u.displayName}
+                                className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-200 dark:border-neutral-700"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                                    {u.displayName}
+                                  </span>
+                                  {u.isVerified && <VerifiedBadge size="sm" />}
+                                </div>
+                                <span className="text-[11px] text-gray-500 dark:text-neutral-400 truncate block">
+                                  @{u.username}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                              Profile <ArrowRight className="w-3 h-3" />
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Communities preview */}
+                  {quickResults.communities.length > 0 && (
+                    <div className="p-2">
+                      <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-neutral-500 flex items-center gap-1.5">
+                        <Users className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                        <span>Communities</span>
+                      </div>
+                      <div className="space-y-0.5 mt-1">
+                        {quickResults.communities.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => handleQuickSelectCommunity(c.slug)}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-indigo-50/70 dark:hover:bg-neutral-800/80 transition text-left group"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <img
+                                src={c.avatar}
+                                alt={c.name}
+                                className="w-8 h-8 rounded-lg object-cover shrink-0"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs font-semibold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                                    {c.name}
+                                  </span>
+                                </div>
+                                <span className="text-[11px] text-gray-500 dark:text-neutral-400 truncate block">
+                                  c/{c.slug} • {c.memberCount} members
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                              Join <ArrowRight className="w-3 h-3" />
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {quickResults.users.length === 0 && quickResults.communities.length === 0 && (
+                    <div className="p-4 text-center text-xs text-gray-500 dark:text-neutral-400">
+                      Press enter to search for <span className="font-semibold text-gray-800 dark:text-neutral-200">"{searchQuery}"</span>
+                    </div>
+                  )}
+
+                  {/* Footer Action */}
+                  <button
+                    type="button"
+                    onClick={handleSearchSubmit}
+                    className="w-full py-2.5 px-4 bg-gray-50 dark:bg-neutral-950/60 hover:bg-gray-100 dark:hover:bg-neutral-800/60 text-xs font-semibold text-blue-600 dark:text-blue-400 text-center flex items-center justify-center gap-1.5 transition"
+                  >
+                    <span>View all search results for "{searchQuery}"</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Search Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowMobileSearch(!showMobileSearch)}
+            className="md:hidden p-2 text-gray-500 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-neutral-800 transition"
+            aria-label="Search"
+          >
+            <Search className="w-5 h-5" />
+          </button>
           {/* Create Button Dropdown */}
           <div className="relative" ref={createMenuRef}>
             <button
@@ -371,17 +579,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span>Privacy & Security Settings</span>
                   </button>
 
-                  <button
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      openAuthModal();
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-xl hover:bg-amber-50 dark:hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 transition text-left"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>Switch Demo Persona</span>
-                  </button>
-
                   <div className="border-t border-gray-100 dark:border-neutral-800 my-1 pt-1">
                     <button
                       onClick={() => {
@@ -407,6 +604,78 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       </div>
+
+      {/* Mobile Search Bar Expandable Drawer */}
+      {showMobileSearch && (
+        <div className="md:hidden border-t border-gray-200 dark:border-neutral-800 p-3 bg-white dark:bg-neutral-900 animate-in slide-in-from-top-2 duration-150">
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+              <input
+                type="text"
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search people (@username), tags, or items..."
+                className="w-full pl-10 pr-9 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-sm text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-200"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shrink-0"
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMobileSearch(false)}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-200 rounded-xl"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </form>
+
+          {/* Quick results on mobile */}
+          {searchQuery.trim() && (quickResults.users.length > 0 || quickResults.communities.length > 0) && (
+            <div className="mt-2 pt-2 border-t border-gray-100 dark:border-neutral-800 max-h-60 overflow-y-auto space-y-1">
+              {quickResults.users.map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  onClick={() => handleQuickSelectUser(u.username)}
+                  className="w-full flex items-center justify-between p-2 rounded-xl bg-gray-50 dark:bg-neutral-950 hover:bg-gray-100 dark:hover:bg-neutral-800 text-left transition"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <img
+                      src={u.avatar}
+                      alt={u.displayName}
+                      className="w-7 h-7 rounded-full object-cover shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-semibold text-gray-900 dark:text-white truncate">{u.displayName}</span>
+                        {u.isVerified && <VerifiedBadge size="sm" />}
+                      </div>
+                      <span className="text-[10px] text-gray-500 dark:text-neutral-400">@{u.username}</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold shrink-0">View</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 };

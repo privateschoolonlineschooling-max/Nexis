@@ -44,6 +44,7 @@ export const DirectMessagesView: React.FC<DirectMessagesViewProps> = ({
 
   // Start new conversation modal
   const [showNewDMModal, setShowNewDMModal] = useState(false);
+  const [newDMUserQuery, setNewDMUserQuery] = useState('');
 
   // Thread options & report
   const [showThreadMenu, setShowThreadMenu] = useState(false);
@@ -465,21 +466,58 @@ export const DirectMessagesView: React.FC<DirectMessagesViewProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-6 shadow-2xl text-gray-900 dark:text-neutral-100">
             <button
-              onClick={() => setShowNewDMModal(false)}
+              onClick={() => {
+                setShowNewDMModal(false);
+                setNewDMUserQuery('');
+              }}
               className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">Start Direct Message</h3>
+            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3">Start Direct Message</h3>
+
+            {/* Search user input */}
+            <div className="relative mb-3">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                value={newDMUserQuery}
+                onChange={(e) => setNewDMUserQuery(e.target.value)}
+                placeholder="Search member by name or @username..."
+                className="w-full pl-9 pr-8 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {newDMUserQuery && (
+                <button
+                  type="button"
+                  onClick={() => setNewDMUserQuery('')}
+                  className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-200"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
 
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
               {allUsers
-                .filter(u => u.id !== currentUser?.id)
+                .filter(u => {
+                  if (u.id === currentUser?.id) return false;
+                  if (!newDMUserQuery.trim()) return true;
+                  const q = newDMUserQuery.toLowerCase().trim().replace(/^@/, '');
+                  return (
+                    u.username.toLowerCase().includes(q) ||
+                    u.displayName.toLowerCase().includes(q) ||
+                    (u.bio && u.bio.toLowerCase().includes(q))
+                  );
+                })
                 .map((u) => (
                   <button
                     key={u.id}
-                    onClick={() => startDMWithUser(u.id)}
+                    onClick={() => {
+                      setShowNewDMModal(false);
+                      setNewDMUserQuery('');
+                      startDMWithUser(u.id);
+                    }}
                     className="w-full flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-neutral-950/80 hover:bg-gray-100 dark:hover:bg-neutral-800/80 border border-gray-200 dark:border-neutral-800 text-left transition"
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -500,6 +538,17 @@ export const DirectMessagesView: React.FC<DirectMessagesViewProps> = ({
                     <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold shrink-0">Message</span>
                   </button>
                 ))}
+
+              {allUsers.filter(u => {
+                if (u.id === currentUser?.id || u.role === 'admin') return false;
+                if (!newDMUserQuery.trim()) return true;
+                const q = newDMUserQuery.toLowerCase().trim().replace(/^@/, '');
+                return u.username.toLowerCase().includes(q) || u.displayName.toLowerCase().includes(q);
+              }).length === 0 && (
+                <div className="py-8 text-center text-xs text-gray-400 dark:text-neutral-500">
+                  No members found matching "{newDMUserQuery}"
+                </div>
+              )}
             </div>
           </div>
         </div>

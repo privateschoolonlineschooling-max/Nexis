@@ -115,6 +115,8 @@ const MainAppLayout: React.FC = () => {
         openAuthModal={() => setIsAuthOpen(true)}
         openSettingsModal={() => setIsSettingsOpen(true)}
         onSearch={handleGlobalSearch}
+        onSelectUser={handleSelectUser}
+        onSelectCommunity={handleSelectCommunity}
       />
 
       {/* Main Responsive Grid Layout */}
@@ -123,6 +125,7 @@ const MainAppLayout: React.FC = () => {
         <Sidebar
           currentView={currentView}
           setCurrentView={handleViewChange}
+          onSelectCommunity={handleSelectCommunity}
         />
 
         {/* Center Content Workspace */}
@@ -190,6 +193,7 @@ const MainAppLayout: React.FC = () => {
               initialQuery={searchQuery}
               onSelectUser={handleSelectUser}
               onSelectCommunity={handleSelectCommunity}
+              onStartDM={handleStartDM}
             />
           )}
         </main>
