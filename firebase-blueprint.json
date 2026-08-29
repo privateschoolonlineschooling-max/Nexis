@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "users": {
+      "fields": {
+        "id": { "type": "string", "description": "User ID" },
+        "username": { "type": "string", "description": "Unique username" },
+        "displayName": { "type": "string", "description": "Display name" },
+        "email": { "type": "string", "description": "User email address" },
+        "avatar": { "type": "string", "description": "Avatar URL" },
+        "role": { "type": "string", "description": "Role: user, creator, seller, admin" },
+        "accountStatus": { "type": "string", "description": "active, suspended, banned" },
+        "isVerified": { "type": "boolean", "description": "Verification status" },
+        "createdAt": { "type": "string", "description": "ISO timestamp" }
+      },
+      "rules": {
+        "read": "true",
+        "write": "request.auth != null"
+      }
+    },
+    "posts": {
+      "fields": {
+        "id": { "type": "string", "description": "Post ID" },
+        "authorId": { "type": "string", "description": "Author UID" },
+        "title": { "type": "string", "description": "Post title" },
+        "content": { "type": "string", "description": "Post text" },
+        "communityId": { "type": "string", "description": "Community ID" },
+        "createdAt": { "type": "string", "description": "Timestamp" }
+      },
+      "rules": {
+        "read": "true",
+        "write": "request.auth != null"
+      }
+    },
+    "communities": {
+      "fields": {
+        "id": { "type": "string", "description": "Community ID" },
+        "name": { "type": "string", "description": "Name" },
+        "slug": { "type": "string", "description": "Slug" },
+        "ownerId": { "type": "string", "description": "Owner UID" }
+      },
+      "rules": {
+        "read": "true",
+        "write": "request.auth != null"
+      }
+    },
+    "listings": {
+      "fields": {
+        "id": { "type": "string", "description": "Listing ID" },
+        "title": { "type": "string", "description": "Title" },
+        "sellerId": { "type": "string", "description": "Seller UID" },
+        "price": { "type": "number", "description": "Price" }
+      },
+      "rules": {
+        "read": "true",
+        "write": "request.auth != null"
+      }
+    },
+    "reports": {
+      "fields": {
+        "id": { "type": "string", "description": "Report ID" },
+        "reporterId": { "type": "string", "description": "Reporter UID" },
+        "targetId": { "type": "string", "description": "Reported content or user ID" },
+        "status": { "type": "string", "description": "pending, resolved, dismissed" }
+      },
+      "rules": {
+        "read": "request.auth != null",
+        "write": "request.auth != null"
+      }
+    },
+    "conversations": {
+      "fields": {
+        "id": { "type": "string", "description": "Conversation ID" },
+        "participantIds": { "type": "array", "description": "Participants list" }
+      },
+      "rules": {
+        "read": "request.auth != null",
+        "write": "request.auth != null"
+      }
+    },
+    "messages": {
+      "fields": {
+        "id": { "type": "string", "description": "Message ID" },
+        "conversationId": { "type": "string", "description": "Conversation ID" },
+        "senderId": { "type": "string", "description": "Sender UID" },
+        "content": { "type": "string", "description": "Message text" }
+      },
+      "rules": {
+        "read": "request.auth != null",
+        "write": "request.auth != null"
+      }
+    }
+  }
+}

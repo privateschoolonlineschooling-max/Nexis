@@ -1,0 +1,6 @@
+{
+  "name": "Nexis Social & Marketplace",
+  "description": "Modern social networking and verified creator marketplace with secure authentication, direct messaging, and verified transactions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,891 @@
+import { 
+  User, 
+  Community, 
+  Post, 
+  Comment,
+  MarketplaceListing, 
+  Review, 
+  Conversation, 
+  DirectMessage, 
+  VerificationApplication, 
+  Report, 
+  Notification, 
+  AuditLog 
+} from '../src/types/index';
+
+export const initialUsers: (User & { passwordHash: string })[] = [
+  {
+    id: 'user_school_admin',
+    username: 'privateschooladmin',
+    displayName: 'Online Schooling Admin',
+    email: 'privateschoolonlineschooling@gmail.com',
+    passwordHash: 'password123',
+    bio: 'Official Super Administrator & Verification Lead for Private School Online Schooling.',
+    location: 'Global',
+    website: 'https://nexis.community',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    isVerified: true,
+    verificationStatus: 'verified',
+    verificationCategory: 'organization',
+    role: 'admin',
+    accountStatus: 'active',
+    followersCount: 15000,
+    followingCount: 10,
+    rating: 5.0,
+    reviewCount: 99,
+    completedSales: 120,
+    followers: ['user_alex', 'user_sarah', 'user_elena', 'user_kai', 'user_mod'],
+    following: ['user_alex', 'user_official'],
+    blockedUserIds: [],
+    mutedUserIds: [],
+    settings: {
+      dmPermission: 'everyone',
+      profileVisibility: 'public',
+      onlineStatusVisible: true,
+      activityVisible: true,
+      marketplaceVisibility: true,
+      emailVerified: true,
+      twoFactorEnabled: true,
+      notifications: {
+        dms: true,
+        followers: true,
+        communityActivity: true,
+        postReactions: true,
+        comments: true,
+        mentions: true,
+        marketplace: true,
+        verificationUpdates: true,
+        securityAlerts: true,
+      }
+    }
+  },
+  {
+    id: 'user_alex',
+    username: 'alex_rivers',
+    displayName: 'Alex Rivers',
+    email: 'alex@nexis.community',
+    passwordHash: 'password123', // In a production app, salted bcrypt hash
+    bio: 'Software architect, open-source enthusiast & tech community organizer. Building the next generation of decentralized web tools.',
+    location: 'San Francisco, CA',
+    website: 'https://alexrivers.dev',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+    createdAt: '2025-01-15T10:00:00.000Z',
+    isVerified: true,
+    verificationStatus: 'verified',
+    verificationCategory: 'creator',
+    role: 'creator',
+    accountStatus: 'active',
+    followersCount: 2480,
+    followingCount: 312,
+    rating: 4.9,
+    reviewCount: 48,
+    completedSales: 62,
+    followers: ['user_sarah', 'user_elena', 'user_kai'],
+    following: ['user_sarah', 'user_official'],
+    blockedUserIds: [],
+    mutedUserIds: [],
+    settings: {
+      dmPermission: 'everyone',
+      profileVisibility: 'public',
+      onlineStatusVisible: true,
+      activityVisible: true,
+      marketplaceVisibility: true,
+      emailVerified: true,
+      twoFactorEnabled: true,
+      notifications: {
+        dms: true,
+        followers: true,
+        communityActivity: true,
+        postReactions: true,
+        comments: true,
+        mentions: true,
+        marketplace: true,
+        verificationUpdates: true,
+        securityAlerts: true,
+      }
+    }
+  },
+  {
+    id: 'user_sarah',
+    username: 'sarah_designs',
+    displayName: 'Sarah Lin',
+    email: 'sarah@designflow.studio',
+    passwordHash: 'password123',
+    bio: 'Senior Design Systems Lead & 3D Artist. Curating clean UI components and minimalist interior goods.',
+    location: 'Seattle, WA',
+    website: 'https://sarahlin.design',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80',
+    createdAt: '2025-02-01T14:30:00.000Z',
+    isVerified: true,
+    verificationStatus: 'verified',
+    verificationCategory: 'creator',
+    role: 'creator',
+    accountStatus: 'active',
+    followersCount: 1890,
+    followingCount: 240,
+    rating: 5.0,
+    reviewCount: 35,
+    completedSales: 41,
+    followers: ['user_alex', 'user_kai'],
+    following: ['user_alex', 'user_elena'],
+    blockedUserIds: [],
+    mutedUserIds: [],
+    settings: {
+      dmPermission: 'everyone',
+      profileVisibility: 'public',
+      onlineStatusVisible: true,
+      activityVisible: true,
+      marketplaceVisibility: true,
+      emailVerified: true,
+      twoFactorEnabled: false,
+      notifications: {
+        dms: true,
+        followers: true,
+        communityActivity: true,
+        postReactions: true,
+        comments: true,
+        mentions: true,
+        marketplace: true,
+        verificationUpdates: true,
+        securityAlerts: true,
+      }
+    }
+  },
+  {
+    id: 'user_elena',
+    username: 'elena_crafts',
+    displayName: 'Elena Rostova Studio',
+    email: 'elena@craftworks.co',
+    passwordHash: 'password123',
+    bio: 'Handmade ceramic artist, Japanese raku pottery & bespoke leather bags maker. Verified artisan shop.',
+    location: 'Portland, OR',
+    website: 'https://elenacraftworks.com',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=1200&q=80',
+    createdAt: '2025-02-10T09:15:00.000Z',
+    isVerified: true,
+    verificationStatus: 'verified',
+    verificationCategory: 'business',
+    role: 'seller',
+    accountStatus: 'active',
+    followersCount: 3410,
+    followingCount: 150,
+    rating: 4.95,
+    reviewCount: 92,
+    completedSales: 128,
+    followers: ['user_alex', 'user_sarah', 'user_kai'],
+    following: ['user_alex'],
+    blockedUserIds: [],
+    mutedUserIds: [],
+    settings: {
+      dmPermission: 'everyone',
+      profileVisibility: 'public',
+      onlineStatusVisible: true,
+      activityVisible: true,
+      marketplaceVisibility: true,
+      emailVerified: true,
+      twoFactorEnabled: true,
+      notifications: {
+        dms: true,
+        followers: true,
+        communityActivity: true,
+        postReactions: true,
+        comments: true,
+        mentions: true,
+        marketplace: true,
+        verificationUpdates: true,
+        securityAlerts: true,
+      }
+    }
+  },
+  {
+    id: 'user_kai',
+    username: 'kai_developer',
+    displayName: 'Kai Morrison',
+    email: 'kai@devbuilds.io',
+    passwordHash: 'password123',
+    bio: 'Fullstack engineer & mechanical keyboard builder. Exploring minimalist workspace setups.',
+    location: 'Austin, TX',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
+    createdAt: '2025-03-01T11:20:00.000Z',
+    isVerified: false,
+    verificationStatus: 'pending',
+    role: 'user',
+    accountStatus: 'active',
+    followersCount: 420,
+    followingCount: 190,
+    rating: 4.8,
+    reviewCount: 12,
+    completedSales: 15,
+    followers: ['user_alex'],
+    following: ['user_alex', 'user_sarah', 'user_elena'],
+    blockedUserIds: [],
+    mutedUserIds: [],
+    settings: {
+      dmPermission: 'everyone',
+      profileVisibility: 'public',
+      onlineStatusVisible: true,
+      activityVisible: true,
+      marketplaceVisibility: true,
+      emailVerified: true,
+      twoFactorEnabled: false,
+      notifications: {
+        dms: true,
+        followers: true,
+        communityActivity: true,
+        postReactions: true,
+        comments: true,
+        mentions: true,
+        marketplace: true,
+        verificationUpdates: true,
+        securityAlerts: true,
+      }
+    }
+  },
+  {
+    id: 'user_mod',
+    username: 'mod_lucas',
+    displayName: 'Lucas Vance (Staff Mod)',
+    email: 'lucas@nexis.safety',
+    passwordHash: 'password123',
+    bio: 'Nexis Trust & Safety Lead. Monitoring platform safety, moderation appeals, and community standards.',
+    location: 'Denver, CO',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+    createdAt: '2025-01-01T08:00:00.000Z',
+    isVerified: true,
+    verificationStatus: 'verified',
+    verificationCategory: 'organization',
+    role: 'admin',
+    accountStatus: 'active',
+    followersCount: 5200,
+    followingCount: 45,
+    followers: ['user_alex', 'user_sarah', 'user_elena', 'user_kai'],
+    following: ['user_official'],
+    blockedUserIds: [],
+    mutedUserIds: [],
+    settings: {
+      dmPermission: 'everyone',
+      profileVisibility: 'public',
+      onlineStatusVisible: true,
+      activityVisible: true,
+      marketplaceVisibility: true,
+      emailVerified: true,
+      twoFactorEnabled: true,
+      notifications: {
+        dms: true,
+        followers: true,
+        communityActivity: true,
+        postReactions: true,
+        comments: true,
+        mentions: true,
+        marketplace: true,
+        verificationUpdates: true,
+        securityAlerts: true,
+      }
+    }
+  },
+  {
+    id: 'user_official',
+    username: 'nexis_official',
+    displayName: 'Nexis Platform Team',
+    email: 'hello@nexis.community',
+    passwordHash: 'password123',
+    bio: 'Official news, system announcements, and updates from the Nexis platform team.',
+    location: 'Global',
+    website: 'https://nexis.community',
+    avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    isVerified: true,
+    verificationStatus: 'verified',
+    verificationCategory: 'organization',
+    role: 'admin',
+    accountStatus: 'active',
+    followersCount: 14200,
+    followingCount: 6,
+    followers: ['user_alex', 'user_sarah', 'user_elena', 'user_kai', 'user_mod'],
+    following: [],
+    blockedUserIds: [],
+    mutedUserIds: [],
+    settings: {
+      dmPermission: 'followers',
+      profileVisibility: 'public',
+      onlineStatusVisible: true,
+      activityVisible: true,
+      marketplaceVisibility: true,
+      emailVerified: true,
+      twoFactorEnabled: true,
+      notifications: {
+        dms: true,
+        followers: true,
+        communityActivity: true,
+        postReactions: true,
+        comments: true,
+        mentions: true,
+        marketplace: true,
+        verificationUpdates: true,
+        securityAlerts: true,
+      }
+    }
+  }
+];
+
+export const initialCommunities: Community[] = [
+  {
+    id: 'comm_tech',
+    name: 'Tech Craft & Systems',
+    slug: 'tech-craft',
+    description: 'A sanctuary for software engineers, systems architects, and open hardware enthusiasts to share technical blueprints and deep-dive discoveries.',
+    avatar: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
+    privacy: 'public',
+    category: 'Technology',
+    createdAt: '2025-01-16T12:00:00.000Z',
+    ownerId: 'user_alex',
+    isVerified: true,
+    verificationStatus: 'verified',
+    memberCount: 3840,
+    tags: ['coding', 'architecture', 'hardware', 'rust', 'typescript'],
+    rules: [
+      { id: 'r1', title: 'Be Respectful & Constructive', description: 'Offer actionable feedback and avoid ad-hominem debates.' },
+      { id: 'r2', title: 'No Spam or Low-Effort Self-Promotion', description: 'Promote tools only with comprehensive technical writeups.' },
+      { id: 'r3', title: 'Provide Code Snippets or Benchmarks', description: 'Include reproducible contexts when discussing system benchmarks.' }
+    ],
+    members: [
+      { userId: 'user_alex', username: 'alex_rivers', displayName: 'Alex Rivers', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80', isVerified: true, role: 'owner', joinedAt: '2025-01-16T12:00:00.000Z' },
+      { userId: 'user_kai', username: 'kai_developer', displayName: 'Kai Morrison', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80', isVerified: false, role: 'moderator', joinedAt: '2025-03-02T10:00:00.000Z' },
+      { userId: 'user_sarah', username: 'sarah_designs', displayName: 'Sarah Lin', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80', isVerified: true, role: 'member', joinedAt: '2025-02-05T16:00:00.000Z' }
+    ],
+    bannedUserIds: [],
+    mutedUserIds: []
+  },
+  {
+    id: 'comm_artisan',
+    name: 'Artisan Makers & Collectibles',
+    slug: 'artisan-makers',
+    description: 'Verified creators, ceramicists, bespoke woodworkers, and independent gear designers sharing their workshop processes and rare item drops.',
+    avatar: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1200&q=80',
+    privacy: 'public',
+    category: 'Art & Craft',
+    createdAt: '2025-02-12T15:00:00.000Z',
+    ownerId: 'user_elena',
+    isVerified: true,
+    verificationStatus: 'verified',
+    memberCount: 2950,
+    tags: ['ceramics', 'leatherwork', 'handmade', 'woodworking', 'crafts'],
+    rules: [
+      { id: 'r1', title: 'Authenticity First', description: 'All items discussed or shown must be handcrafted or original works.' },
+      { id: 'r2', title: 'Marketplace Safety', description: 'Always follow platform external payment guidelines when linking checkout links.' }
+    ],
+    members: [
+      { userId: 'user_elena', username: 'elena_crafts', displayName: 'Elena Rostova Studio', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80', isVerified: true, role: 'owner', joinedAt: '2025-02-12T15:00:00.000Z' },
+      { userId: 'user_sarah', username: 'sarah_designs', displayName: 'Sarah Lin', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80', isVerified: true, role: 'member', joinedAt: '2025-02-14T09:00:00.000Z' }
+    ],
+    bannedUserIds: [],
+    mutedUserIds: []
+  },
+  {
+    id: 'comm_design',
+    name: 'Design Systems & Spatial UI',
+    slug: 'design-systems',
+    description: 'Deep discussions on accessible tokens, fluid typography, 3D interaction design, and micro-interactions.',
+    avatar: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+    privacy: 'public',
+    category: 'Design',
+    createdAt: '2025-02-05T18:00:00.000Z',
+    ownerId: 'user_sarah',
+    isVerified: true,
+    verificationStatus: 'verified',
+    memberCount: 4210,
+    tags: ['ui', 'ux', 'designsystems', 'figma', 'motion'],
+    rules: [
+      { id: 'r1', title: 'Include Context', description: 'State the user scenario when asking for interface critique.' }
+    ],
+    members: [
+      { userId: 'user_sarah', username: 'sarah_designs', displayName: 'Sarah Lin', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80', isVerified: true, role: 'owner', joinedAt: '2025-02-05T18:00:00.000Z' },
+      { userId: 'user_alex', username: 'alex_rivers', displayName: 'Alex Rivers', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80', isVerified: true, role: 'member', joinedAt: '2025-02-06T10:00:00.000Z' }
+    ],
+    bannedUserIds: [],
+    mutedUserIds: []
+  },
+  {
+    id: 'comm_gardening',
+    name: 'Urban Botanical & Living Spaces',
+    slug: 'urban-botanical',
+    description: 'Indoor plant propagation, vertical hydroponics, and sustainable balcony gardens in metropolitan settings.',
+    avatar: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=400&q=80',
+    banner: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=1200&q=80',
+    privacy: 'public',
+    category: 'Lifestyle',
+    createdAt: '2025-02-20T08:00:00.000Z',
+    ownerId: 'user_kai',
+    isVerified: false,
+    verificationStatus: 'none',
+    memberCount: 1540,
+    tags: ['plants', 'botany', 'urban', 'gardening', 'sustainability'],
+    rules: [
+      { id: 'r1', title: 'Help Beginners', description: 'Be kind when answering plant diagnosis inquiries.' }
+    ],
+    members: [
+      { userId: 'user_kai', username: 'kai_developer', displayName: 'Kai Morrison', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80', isVerified: false, role: 'owner', joinedAt: '2025-02-20T08:00:00.000Z' }
+    ],
+    bannedUserIds: [],
+    mutedUserIds: []
+  }
+];
+
+export const initialPosts: Post[] = [
+  {
+    id: 'post_1',
+    authorId: 'user_alex',
+    authorUsername: 'alex_rivers',
+    authorDisplayName: 'Alex Rivers',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    authorVerified: true,
+    communityId: 'comm_tech',
+    communityName: 'Tech Craft & Systems',
+    communitySlug: 'tech-craft',
+    type: 'poll',
+    title: 'Architectural Shift: What is your primary rendering model in 2026?',
+    content: 'We are evaluating performance profiles for high-throughput collaborative apps. Which architectural pattern has provided you with the lowest P99 latency and cleanest caching story?',
+    pollOptions: [
+      { id: 'opt_1', text: 'Server Components with Edge Caching', votes: 142, voterIds: ['user_sarah', 'user_elena'] },
+      { id: 'opt_2', text: 'Optimistic Client Cache + CRDT Sync', votes: 189, voterIds: ['user_kai', 'user_alex'] },
+      { id: 'opt_3', text: 'Hybrid SSR + Hydrated Island Modules', votes: 88, voterIds: [] },
+      { id: 'opt_4', text: 'Static Shell with Realtime WebSockets', votes: 110, voterIds: [] }
+    ],
+    visibility: 'public',
+    createdAt: '2026-08-15T18:30:00.000Z',
+    likes: ['user_sarah', 'user_kai', 'user_elena'],
+    bookmarks: ['user_sarah'],
+    sharesCount: 19,
+    commentsCount: 3,
+    viewsCount: 1420,
+    tags: ['architecture', 'performance', 'webdev', 'scalability'],
+    mentions: []
+  },
+  {
+    id: 'post_2',
+    authorId: 'user_sarah',
+    authorUsername: 'sarah_designs',
+    authorDisplayName: 'Sarah Lin',
+    authorAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    authorVerified: true,
+    communityId: 'comm_design',
+    communityName: 'Design Systems & Spatial UI',
+    communitySlug: 'design-systems',
+    type: 'image',
+    title: 'Exploration on Optical Padding and Border Harmony',
+    content: 'When designing dense nested cards, strictly observing the radius formula `InnerRadius = OuterRadius - Padding` eliminates visual awkwardness. Here is our new component set featuring warm monochromatic tones.',
+    images: [
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1000&q=80'
+    ],
+    visibility: 'public',
+    createdAt: '2026-08-16T09:15:00.000Z',
+    likes: ['user_alex', 'user_elena', 'user_kai'],
+    bookmarks: ['user_alex', 'user_kai'],
+    sharesCount: 34,
+    commentsCount: 2,
+    viewsCount: 2310,
+    tags: ['ui', 'typography', 'designsystems', 'visualmath'],
+    mentions: ['alex_rivers']
+  },
+  {
+    id: 'post_3',
+    authorId: 'user_official',
+    authorUsername: 'nexis_official',
+    authorDisplayName: 'Nexis Platform Team',
+    authorAvatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80',
+    authorVerified: true,
+    type: 'announcement',
+    isAnnouncement: true,
+    title: 'Platform Update: Enhanced Verification Standards & Safe External Checkout Interstitials',
+    content: 'We have updated our Trust & Safety framework! Our Verified Badges now provide verified identity criteria for legitimate creators and organizations. Additionally, all marketplace listings with external payment destinations now feature full safety interstitials to safeguard buyer awareness.',
+    visibility: 'public',
+    createdAt: '2026-08-14T12:00:00.000Z',
+    likes: ['user_alex', 'user_sarah', 'user_elena', 'user_kai', 'user_mod'],
+    bookmarks: ['user_alex'],
+    sharesCount: 140,
+    commentsCount: 1,
+    viewsCount: 8900,
+    tags: ['platform', 'safety', 'updates', 'verification'],
+    mentions: []
+  },
+  {
+    id: 'post_4',
+    authorId: 'user_elena',
+    authorUsername: 'elena_crafts',
+    authorDisplayName: 'Elena Rostova Studio',
+    authorAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
+    authorVerified: true,
+    communityId: 'comm_artisan',
+    communityName: 'Artisan Makers & Collectibles',
+    communitySlug: 'artisan-makers',
+    type: 'link',
+    title: 'Autumn Ceramic Glazes Collection Showcase',
+    content: 'Just finalized the wood-fired kiln cycle for our latest series of minimalist tea sets and stoneware carafes. Documented the full recipe and shrinkage curves on our studio journal.',
+    linkUrl: 'https://elenacraftworks.com/journal/autumn-raku-glazes',
+    linkTitle: 'Wood-fired Shino and Obsidian Glazes in High Temperature Kilns',
+    linkDescription: 'A detailed breakdown of natural ash accumulation, clay thermal expansion, and reduction atmosphere testing.',
+    linkImage: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80',
+    visibility: 'public',
+    createdAt: '2026-08-16T11:45:00.000Z',
+    likes: ['user_alex', 'user_sarah'],
+    bookmarks: ['user_sarah'],
+    sharesCount: 12,
+    commentsCount: 0,
+    viewsCount: 950,
+    tags: ['ceramics', 'handmade', 'craftsmanship'],
+    mentions: []
+  }
+];
+
+export const initialComments: Comment[] = [
+  {
+    id: 'comm_c1',
+    postId: 'post_1',
+    authorId: 'user_sarah',
+    authorUsername: 'sarah_designs',
+    authorDisplayName: 'Sarah Lin',
+    authorAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    authorVerified: true,
+    content: 'We noticed a 40% reduction in interaction stalls when moving state reconciliation off the main thread with optimistic caching.',
+    createdAt: '2026-08-15T19:10:00.000Z',
+    likes: ['user_alex', 'user_kai']
+  },
+  {
+    id: 'comm_c2',
+    postId: 'post_1',
+    authorId: 'user_kai',
+    authorUsername: 'kai_developer',
+    authorDisplayName: 'Kai Morrison',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    authorVerified: false,
+    content: 'Agreed! The local-first CRDT pattern gives instant feedback on slow mobile networks.',
+    createdAt: '2026-08-15T19:45:00.000Z',
+    likes: ['user_alex']
+  },
+  {
+    id: 'comm_c3',
+    postId: 'post_2',
+    authorId: 'user_alex',
+    authorUsername: 'alex_rivers',
+    authorDisplayName: 'Alex Rivers',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    authorVerified: true,
+    content: 'The radius equation makes a noticeable optical difference on desktop viewports. Super crisp execution @sarah_designs!',
+    createdAt: '2026-08-16T10:00:00.000Z',
+    likes: ['user_sarah']
+  }
+];
+
+export const initialMarketplaceListings: MarketplaceListing[] = [
+  {
+    id: 'list_1',
+    sellerId: 'user_elena',
+    sellerUsername: 'elena_crafts',
+    sellerDisplayName: 'Elena Rostova Studio',
+    sellerAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
+    sellerVerified: true,
+    sellerRating: 4.95,
+    sellerReviewCount: 92,
+    title: 'Handcrafted Minimalist Stoneware Pour-Over Carafe & Cup Set',
+    description: 'Individually wheel-thrown using speckled stoneware clay from the Pacific Northwest. Fired with a matte ivory glaze on the exterior and glossy obsidian interior for seamless washing. Dishwasher and microwave safe. Limited batch of 8 sets.',
+    price: 95.00,
+    currency: 'USD',
+    category: 'Home & Living',
+    condition: 'new',
+    location: 'Portland, OR (Ships Worldwide)',
+    images: [
+      'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80'
+    ],
+    status: 'available',
+    externalPaymentLink: 'https://buy.stripe.com/demo_artisan_ceramics_pourover',
+    externalPaymentProvider: 'Stripe Checkout',
+    createdAt: '2026-08-12T14:00:00.000Z',
+    viewsCount: 680,
+    savesCount: 74,
+    savedByUserIds: ['user_alex', 'user_sarah']
+  },
+  {
+    id: 'list_2',
+    sellerId: 'user_kai',
+    sellerUsername: 'kai_developer',
+    sellerDisplayName: 'Kai Morrison',
+    sellerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    sellerVerified: false,
+    sellerRating: 4.8,
+    sellerReviewCount: 12,
+    title: 'Custom 65% CNC Aluminum Mechanical Keyboard (Lubed Gateron Oil Kings)',
+    description: 'Anodized cosmic gray case with brass weight, hot-swappable PCB, poron gasket mount, hand-lubed and filmed Gateron Oil King linear switches, and PBT dye-sub keycaps. Includes braided USB-C cable and carrying case.',
+    price: 245.00,
+    currency: 'USD',
+    category: 'Electronics',
+    condition: 'like_new',
+    location: 'Austin, TX',
+    images: [
+      'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=800&q=80'
+    ],
+    status: 'available',
+    externalPaymentLink: 'https://paypal.me/demo_keyboard_build',
+    externalPaymentProvider: 'PayPal Goods & Services',
+    createdAt: '2026-08-13T16:30:00.000Z',
+    viewsCount: 420,
+    savesCount: 38,
+    savedByUserIds: ['user_alex']
+  },
+  {
+    id: 'list_3',
+    sellerId: 'user_sarah',
+    sellerUsername: 'sarah_designs',
+    sellerDisplayName: 'Sarah Lin',
+    sellerAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    sellerVerified: true,
+    sellerRating: 5.0,
+    sellerReviewCount: 35,
+    title: 'Spatial UI & 3D Glass Icons Design Kit (Figma + Blender Assets)',
+    description: 'Over 240+ hyper-detailed vector tokens, responsive layout presets, light/dark mode auto-switching components, and pre-rendered 4K transparent 3D glass icons for modern software designers. Instant digital download.',
+    price: 49.00,
+    currency: 'USD',
+    category: 'Digital Products',
+    condition: 'new',
+    location: 'Digital Download',
+    images: [
+      'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80'
+    ],
+    status: 'available',
+    externalPaymentLink: 'https://gumroad.com/l/demo_spatial_ui_kit',
+    externalPaymentProvider: 'Gumroad Store',
+    createdAt: '2026-08-10T10:00:00.000Z',
+    viewsCount: 1120,
+    savesCount: 145,
+    savedByUserIds: ['user_alex', 'user_kai']
+  },
+  {
+    id: 'list_4',
+    sellerId: 'user_elena',
+    sellerUsername: 'elena_crafts',
+    sellerDisplayName: 'Elena Rostova Studio',
+    sellerAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
+    sellerVerified: true,
+    sellerRating: 4.95,
+    sellerReviewCount: 92,
+    title: 'Full-Grain Vegetable Tanned Leather Messenger Bag (Espresso Brown)',
+    description: 'Saddle-stitched by hand with waxed linen thread. Solid brass hardware that patinas beautifully with age. Laptop sleeve compartment fits up to 16-inch laptops. Lifetime craft warranty.',
+    price: 280.00,
+    currency: 'USD',
+    category: 'Fashion & Apparel',
+    condition: 'new',
+    location: 'Portland, OR',
+    images: [
+      'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80'
+    ],
+    status: 'available',
+    externalPaymentLink: 'https://buy.stripe.com/demo_leather_craft_messenger',
+    externalPaymentProvider: 'Stripe Checkout',
+    createdAt: '2026-08-11T09:00:00.000Z',
+    viewsCount: 530,
+    savesCount: 49,
+    savedByUserIds: ['user_sarah']
+  }
+];
+
+export const initialReviews: Review[] = [
+  {
+    id: 'rev_1',
+    sellerId: 'user_elena',
+    buyerId: 'user_alex',
+    buyerUsername: 'alex_rivers',
+    buyerDisplayName: 'Alex Rivers',
+    buyerAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    buyerVerified: true,
+    listingId: 'list_1',
+    listingTitle: 'Handcrafted Minimalist Stoneware Pour-Over Carafe',
+    rating: 5,
+    comment: 'Exceptional craftsmanship. The glaze texture in person is even more stunning than the photos. Packaged securely with eco-friendly honeycomb wrap. Highly recommend Elena!',
+    createdAt: '2026-08-14T15:20:00.000Z'
+  },
+  {
+    id: 'rev_2',
+    sellerId: 'user_sarah',
+    buyerId: 'user_alex',
+    buyerUsername: 'alex_rivers',
+    buyerDisplayName: 'Alex Rivers',
+    buyerAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    buyerVerified: true,
+    listingId: 'list_3',
+    listingTitle: 'Spatial UI & 3D Glass Icons Design Kit',
+    rating: 5,
+    comment: 'The tokens are extraordinarily well structured. Cut our frontend prototyping time in half. Flawless Figma component hierarchy.',
+    createdAt: '2026-08-12T11:00:00.000Z'
+  }
+];
+
+export const initialConversations: Conversation[] = [
+  {
+    id: 'conv_1',
+    isGroup: false,
+    participantIds: ['user_alex', 'user_sarah'],
+    participants: [
+      { id: 'user_alex', username: 'alex_rivers', displayName: 'Alex Rivers', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80', isVerified: true, isOnline: true },
+      { id: 'user_sarah', username: 'sarah_designs', displayName: 'Sarah Lin', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80', isVerified: true, isOnline: true }
+    ],
+    lastMessage: {
+      content: 'Hey Sarah! Loved your post on optical padding in Design Systems.',
+      senderDisplayName: 'Alex Rivers',
+      createdAt: '2026-08-16T12:00:00.000Z',
+      isRead: false
+    },
+    updatedAt: '2026-08-16T12:00:00.000Z',
+    createdAt: '2026-08-15T10:00:00.000Z'
+  },
+  {
+    id: 'conv_2',
+    isGroup: true,
+    name: 'Makers & Founders Circle',
+    avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80',
+    participantIds: ['user_alex', 'user_sarah', 'user_elena', 'user_kai'],
+    participants: [
+      { id: 'user_alex', username: 'alex_rivers', displayName: 'Alex Rivers', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80', isVerified: true, isOnline: true },
+      { id: 'user_sarah', username: 'sarah_designs', displayName: 'Sarah Lin', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80', isVerified: true, isOnline: true },
+      { id: 'user_elena', username: 'elena_crafts', displayName: 'Elena Rostova Studio', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80', isVerified: true, isOnline: false },
+      { id: 'user_kai', username: 'kai_developer', displayName: 'Kai Morrison', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80', isVerified: false, isOnline: true }
+    ],
+    lastMessage: {
+      content: 'Welcome everyone! We can coordinate community collabs and marketplace drops here.',
+      senderDisplayName: 'Alex Rivers',
+      createdAt: '2026-08-16T11:00:00.000Z',
+      isRead: true
+    },
+    updatedAt: '2026-08-16T11:00:00.000Z',
+    createdAt: '2026-08-14T08:00:00.000Z'
+  }
+];
+
+export const initialMessages: DirectMessage[] = [
+  {
+    id: 'msg_1',
+    conversationId: 'conv_1',
+    senderId: 'user_sarah',
+    senderUsername: 'sarah_designs',
+    senderDisplayName: 'Sarah Lin',
+    senderAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    senderVerified: true,
+    content: 'Hi Alex! Thanks for checking out the design kit earlier. Did you have any thoughts on the 3D asset integration?',
+    reactions: [{ emoji: '✨', userId: 'user_alex', username: 'alex_rivers' }],
+    readByUserIds: ['user_sarah', 'user_alex'],
+    createdAt: '2026-08-16T11:50:00.000Z'
+  },
+  {
+    id: 'msg_2',
+    conversationId: 'conv_1',
+    senderId: 'user_alex',
+    senderUsername: 'alex_rivers',
+    senderDisplayName: 'Alex Rivers',
+    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    senderVerified: true,
+    content: 'Hey Sarah! Loved your post on optical padding in Design Systems. The asset kit imported seamlessly into our prototypes!',
+    reactions: [{ emoji: '🙌', userId: 'user_sarah', username: 'sarah_designs' }],
+    readByUserIds: ['user_alex'],
+    createdAt: '2026-08-16T12:00:00.000Z'
+  }
+];
+
+export const initialVerifications: VerificationApplication[] = [
+  {
+    id: 'verif_kai',
+    targetType: 'user',
+    targetId: 'user_kai',
+    targetName: 'Kai Morrison',
+    targetSlugOrUsername: 'kai_developer',
+    applicantId: 'user_kai',
+    applicantUsername: 'kai_developer',
+    applicantEmail: 'kai@devbuilds.io',
+    category: 'creator',
+    statement: 'I am a hardware creator & open source developer with active repositories and custom keyboard build guides reaching over 50k monthly readers.',
+    officialLinks: ['https://github.com/kaimorrison-dev', 'https://devbuilds.io/about'],
+    documentUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80',
+    documentType: 'Government ID & Domain Ownership Verification',
+    status: 'pending',
+    submittedAt: '2026-08-16T08:00:00.000Z'
+  }
+];
+
+export const initialReports: Report[] = [
+  {
+    id: 'rep_1',
+    reporterId: 'user_sarah',
+    reporterUsername: 'sarah_designs',
+    category: 'listing',
+    targetId: 'list_demo_sample',
+    targetTitleOrSnippet: 'Suspected duplicate listing claiming unauthorized resale',
+    reason: 'fraud_or_scam',
+    details: 'User posted an external payment link redirecting to an unverified third-party domain that looks suspicious.',
+    status: 'pending',
+    createdAt: '2026-08-16T10:15:00.000Z'
+  }
+];
+
+export const initialNotifications: Notification[] = [
+  {
+    id: 'notif_1',
+    userId: 'user_alex',
+    type: 'reaction',
+    title: 'New Post Reaction',
+    message: 'Sarah Lin and 2 others liked your poll on Architectural Shifts.',
+    link: '/post/post_1',
+    isRead: false,
+    sourceUserId: 'user_sarah',
+    sourceUserName: 'Sarah Lin',
+    sourceUserAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    createdAt: '2026-08-16T12:05:00.000Z'
+  },
+  {
+    id: 'notif_2',
+    userId: 'user_alex',
+    type: 'dm',
+    title: 'New Direct Message',
+    message: 'Sarah Lin sent you a direct message.',
+    link: '/messages',
+    isRead: false,
+    sourceUserId: 'user_sarah',
+    sourceUserName: 'Sarah Lin',
+    sourceUserAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    createdAt: '2026-08-16T11:50:00.000Z'
+  },
+  {
+    id: 'notif_3',
+    userId: 'user_alex',
+    type: 'verification',
+    title: 'Account Authenticity Verified',
+    message: 'Your official Creator Verification badge is active on your profile.',
+    isRead: true,
+    createdAt: '2025-01-20T10:00:00.000Z'
+  }
+];
+
+export const initialAuditLogs: AuditLog[] = [
+  {
+    id: 'audit_1',
+    moderatorId: 'user_mod',
+    moderatorUsername: 'mod_lucas',
+    action: 'APPROVED_VERIFICATION',
+    targetType: 'user',
+    targetId: 'user_alex',
+    details: 'Verified identity and open-source public figure credentials.',
+    timestamp: '2025-01-20T10:00:00.000Z'
+  }
+];
