@@ -29,13 +29,15 @@ import {
 } from 'firebase/firestore';
 import firebaseConfigData from '../../firebase-applet-config.json';
 
+const env = ((import.meta as any)?.env || {}) as Record<string, string | undefined>;
+
 const firebaseConfig = {
-  apiKey: firebaseConfigData.apiKey,
-  authDomain: firebaseConfigData.authDomain,
-  projectId: firebaseConfigData.projectId,
-  storageBucket: firebaseConfigData.storageBucket,
-  messagingSenderId: firebaseConfigData.messagingSenderId,
-  appId: firebaseConfigData.appId,
+  apiKey: env.VITE_FIREBASE_API_KEY || firebaseConfigData.apiKey,
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfigData.authDomain,
+  projectId: env.VITE_FIREBASE_PROJECT_ID || firebaseConfigData.projectId,
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfigData.storageBucket,
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfigData.messagingSenderId,
+  appId: env.VITE_FIREBASE_APP_ID || firebaseConfigData.appId,
 };
 
 // Initialize Firebase App
@@ -47,9 +49,10 @@ export const app: FirebaseApp = !getApps().length
 export const auth: Auth = getAuth(app);
 
 // Initialize Firestore (pointing to custom firestoreDatabaseId if configured)
+const targetDatabaseId = env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || firebaseConfigData.firestoreDatabaseId || undefined;
 export const db: Firestore = getFirestore(
   app, 
-  firebaseConfigData.firestoreDatabaseId || undefined
+  targetDatabaseId
 );
 
 // Google Auth Provider
