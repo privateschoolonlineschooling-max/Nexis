@@ -1,0 +1,112 @@
+{
+  "users": [
+    {
+      "id": "user_school_admin",
+      "username": "privateschooladmin",
+      "displayName": "Online Schooling Admin",
+      "email": "privateschoolonlineschooling@gmail.com",
+      "passwordHash": "password123",
+      "bio": "Official Super Administrator & Verification Lead for Private School Online Schooling.",
+      "location": "Global",
+      "website": "https://nexis.community",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+      "banner": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "isVerified": true,
+      "verificationStatus": "verified",
+      "verificationCategory": "organization",
+      "role": "admin",
+      "accountStatus": "active",
+      "followersCount": 0,
+      "followingCount": 0,
+      "rating": 5,
+      "reviewCount": 0,
+      "completedSales": 0,
+      "followers": [],
+      "following": [],
+      "blockedUserIds": [],
+      "mutedUserIds": [],
+      "settings": {
+        "dmPermission": "everyone",
+        "profileVisibility": "public",
+        "onlineStatusVisible": true,
+        "activityVisible": true,
+        "marketplaceVisibility": true,
+        "emailVerified": true,
+        "twoFactorEnabled": true,
+        "notifications": {
+          "dms": true,
+          "followers": true,
+          "communityActivity": true,
+          "postReactions": true,
+          "comments": true,
+          "mentions": true,
+          "marketplace": true,
+          "verificationUpdates": true,
+          "securityAlerts": true
+        }
+      }
+    },
+    {
+      "id": "user_1788092445495_qa4ml",
+      "username": "testcreator",
+      "displayName": "Test Creator",
+      "email": "creator@test.com",
+      "passwordHash": "mypassword123",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=testcreator",
+      "createdAt": "2026-08-30T12:20:45.495Z",
+      "isVerified": false,
+      "verificationStatus": "none",
+      "role": "user",
+      "accountStatus": "active",
+      "followersCount": 0,
+      "followingCount": 0,
+      "followers": [],
+      "following": [],
+      "blockedUserIds": [],
+      "mutedUserIds": [],
+      "settings": {
+        "dmPermission": "everyone",
+        "profileVisibility": "public",
+        "onlineStatusVisible": true,
+        "activityVisible": true,
+        "marketplaceVisibility": true,
+        "emailVerified": false,
+        "twoFactorEnabled": false,
+        "notifications": {
+          "dms": true,
+          "followers": true,
+          "communityActivity": true,
+          "postReactions": true,
+          "comments": true,
+          "mentions": true,
+          "marketplace": true,
+          "verificationUpdates": true,
+          "securityAlerts": true
+        }
+      }
+    }
+  ],
+  "communities": [],
+  "posts": [],
+  "comments": [],
+  "listings": [],
+  "reviews": [],
+  "conversations": [],
+  "messages": [],
+  "verifications": [],
+  "reports": [],
+  "notifications": [],
+  "auditLogs": [
+    {
+      "id": "audit_init",
+      "moderatorId": "user_school_admin",
+      "moderatorUsername": "privateschooladmin",
+      "action": "PLATFORM_INITIALIZED",
+      "targetType": "system",
+      "targetId": "nexis_platform",
+      "details": "System initialized with primary Super Admin verified credentials.",
+      "timestamp": "2025-01-01T00:00:00.000Z"
+    }
+  ]
+}

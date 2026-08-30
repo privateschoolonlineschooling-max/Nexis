@@ -126,25 +126,34 @@ async function startServer() {
     try {
       const { username, email, password, displayName } = req.body;
       if (!username || !email || !password || !displayName) {
-        return res.status(400).json({ error: 'Missing required fields' });
+        return res.status(400).json({ error: 'Please provide all required fields: Display Name, Username, Email, and Password.' });
       }
 
-      if (db.getUserByUsername(username)) {
-        return res.status(409).json({ error: 'Username is already taken' });
-      }
-      if (db.getUserByEmail(email)) {
-        return res.status(409).json({ error: 'Email is already registered' });
+      const cleanUsername = String(username).toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
+      const cleanEmail = String(email).toLowerCase().trim();
+      const cleanDisplayName = String(displayName).trim();
+      const cleanPassword = String(password);
+
+      if (!cleanUsername || cleanUsername.length < 3) {
+        return res.status(400).json({ error: 'Username must be at least 3 characters and contain only letters, numbers, and underscores.' });
       }
 
-      const isSuper = isSuperAdminEmail(email);
+      if (db.getUserByUsername(cleanUsername)) {
+        return res.status(409).json({ error: 'This username is already taken. Please choose another one.' });
+      }
+      if (db.getUserByEmail(cleanEmail)) {
+        return res.status(409).json({ error: 'This email address is already registered. Please sign in instead.' });
+      }
+
+      const isSuper = isSuperAdminEmail(cleanEmail);
 
       const newUser = db.createUser({
-        id: `user_${Date.now()}`,
-        username: username.toLowerCase().trim().replace(/[^a-z0-9_]/g, ''),
-        displayName: displayName.trim(),
-        email: email.toLowerCase().trim(),
-        passwordHash: password, // Simulated hashed storage
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+        id: `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        username: cleanUsername,
+        displayName: cleanDisplayName,
+        email: cleanEmail,
+        passwordHash: cleanPassword, // Simulated hashed storage
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`,
         createdAt: new Date().toISOString(),
         isVerified: isSuper,
         verificationStatus: isSuper ? 'verified' : 'none',
@@ -181,7 +190,7 @@ async function startServer() {
 
       return res.status(201).json({ user: newUser });
     } catch (err: any) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: err.message || 'Registration failed' });
     }
   });
 
@@ -189,12 +198,69 @@ async function startServer() {
     try {
       const { usernameOrEmail, password } = req.body;
       if (!usernameOrEmail || !password) {
-        return res.status(400).json({ error: 'Username/Email and password required' });
+        return res.status(400).json({ error: 'Username/Email and password are required' });
       }
 
-      let user = db.getUserByUsername(usernameOrEmail) || db.getUserByEmail(usernameOrEmail);
-      if (!user || user.passwordHash !== password) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+      const cleanIdentifier = String(usernameOrEmail).trim();
+      const cleanPassword = String(password);
+
+      let user = db.getUserByUsername(cleanIdentifier) || db.getUserByEmail(cleanIdentifier);
+      if (!user) {
+        if (isSuperAdminEmail(cleanIdentifier)) {
+          user = db.createUser({
+            id: 'user_school_admin',
+            username: 'privateschooladmin',
+            displayName: 'Online Schooling Admin',
+            email: 'privateschoolonlineschooling@gmail.com',
+            passwordHash: cleanPassword || 'password123',
+            bio: 'Official Super Administrator & Verification Lead for Private School Online Schooling.',
+            location: 'Global',
+            website: 'https://nexis.community',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+            banner: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+            createdAt: new Date().toISOString(),
+            isVerified: true,
+            verificationStatus: 'verified',
+            verificationCategory: 'organization',
+            role: 'admin',
+            accountStatus: 'active',
+            followersCount: 0,
+            followingCount: 0,
+            rating: 5,
+            reviewCount: 0,
+            completedSales: 0,
+            followers: [],
+            following: [],
+            blockedUserIds: [],
+            mutedUserIds: [],
+            settings: {
+              dmPermission: 'everyone',
+              profileVisibility: 'public',
+              onlineStatusVisible: true,
+              activityVisible: true,
+              marketplaceVisibility: true,
+              emailVerified: true,
+              twoFactorEnabled: true,
+              notifications: {
+                dms: true,
+                followers: true,
+                communityActivity: true,
+                postReactions: true,
+                comments: true,
+                mentions: true,
+                marketplace: true,
+                verificationUpdates: true,
+                securityAlerts: true,
+              }
+            }
+          }) as any;
+        } else {
+          return res.status(401).json({ error: 'No account found matching this username or email.' });
+        }
+      }
+
+      if (user.passwordHash !== cleanPassword) {
+        return res.status(401).json({ error: 'Incorrect password. Please verify and try again.' });
       }
 
       user = ensureSuperAdminPrivileges(user);
@@ -206,7 +272,7 @@ async function startServer() {
       const { passwordHash, ...safeUser } = user;
       return res.json({ user: safeUser });
     } catch (err: any) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: err.message || 'Login failed' });
     }
   });
 
@@ -1255,6 +1321,13 @@ async function startServer() {
       verifiedUsers,
       trendingTags
     });
+  });
+
+  // ==========================================
+  // --- API CATCH-ALL (PREVENT HTML 404s) ---
+  // ==========================================
+  app.all('/api/*', (req, res) => {
+    res.status(404).json({ error: `API route not found: ${req.method} ${req.originalUrl}` });
   });
 
   // ==========================================

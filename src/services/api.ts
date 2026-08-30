@@ -42,6 +42,7 @@ class ApiService {
     const userId = this.getCurrentUserId();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...(options.headers as Record<string, string> || {})
     };
 
@@ -52,20 +53,38 @@ class ApiService {
     try {
       const res = await fetch(endpoint, { ...options, headers });
       if (!res.ok) {
-        let errMsg = `Request failed (${res.status}): ${res.statusText || 'Unknown error'}`;
+        let errMsg = '';
         try {
-          const errorData = await res.json();
-          if (errorData && errorData.error) {
-            errMsg = errorData.error;
+          const contentType = res.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const errorData = await res.json();
+            if (errorData && (errorData.error || errorData.message)) {
+              errMsg = errorData.error || errorData.message;
+            }
           }
         } catch (e) {
-          // response is not JSON
+          // ignore json parse error
         }
+
+        if (!errMsg) {
+          if (res.status === 404) {
+            errMsg = 'The requested account, post, or resource could not be found.';
+          } else if (res.status === 401) {
+            errMsg = 'Invalid credentials. Please verify your username/email and password.';
+          } else if (res.status === 409) {
+            errMsg = 'An account with this email address or username already exists.';
+          } else if (res.status === 403) {
+            errMsg = 'Access denied or account suspended.';
+          } else {
+            errMsg = `Request error (${res.status}): ${res.statusText || 'Unable to process request'}`;
+          }
+        }
+
         throw new Error(errMsg);
       }
       return await res.json() as Promise<T>;
     } catch (err: any) {
-      if (err.message && !err.message.startsWith('Request failed')) {
+      if (err.message && !err.message.startsWith('Request error') && !err.message.startsWith('Request failed')) {
         throw err;
       }
       throw new Error(err.message || 'Network request failed. Please check your connection.');
