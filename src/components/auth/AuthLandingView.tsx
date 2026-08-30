@@ -48,10 +48,11 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
   const [customGoogleName, setCustomGoogleName] = useState('');
 
   const handleGoogleSignIn = async (customEmail?: string, customName?: string) => {
+    const email = customEmail || customGoogleEmail || undefined;
+    const name = customName || customGoogleName || undefined;
+
     try {
       setGoogleLoading(true);
-      const email = customEmail || customGoogleEmail || undefined;
-      const name = customName || customGoogleName || undefined;
       
       await loginWithGoogle({
         email: email ? email.trim() : undefined,
@@ -64,7 +65,12 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
       setShowGoogleCustomModal(false);
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      showToast(err.message || 'Google authentication failed', 'error');
+      if (!email) {
+        // In iframe or preview where popups are blocked, prompt user for their own email/name
+        setShowGoogleCustomModal(true);
+      } else {
+        showToast(err.message || 'Google authentication failed', 'error');
+      }
     } finally {
       setGoogleLoading(false);
     }

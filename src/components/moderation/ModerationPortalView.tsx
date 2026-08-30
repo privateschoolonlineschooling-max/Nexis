@@ -265,6 +265,22 @@ export const ModerationPortalView: React.FC = () => {
     return true;
   });
 
+  const isStaff = currentUser?.role === 'admin' || currentUser?.role === 'moderator';
+
+  if (!isStaff) {
+    return (
+      <div className="max-w-xl mx-auto my-12 p-8 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl text-center space-y-4 shadow-sm">
+        <div className="w-14 h-14 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mx-auto border border-red-200 dark:border-red-800/50">
+          <ShieldAlert className="w-7 h-7" />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Restricted Access Area</h2>
+        <p className="text-xs text-gray-600 dark:text-neutral-400 leading-relaxed max-w-md mx-auto">
+          The Trust, Safety & Platform Administration portal is strictly restricted to verified platform administrators and moderators. Standard members do not have administrative privileges.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div id="moderation-portal-container" className="space-y-6 pb-12">
       {/* Banner */}

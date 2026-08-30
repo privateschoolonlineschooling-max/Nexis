@@ -32,6 +32,8 @@ async function startServer() {
       user.verificationCategory = 'organization';
       user.accountStatus = 'active';
       if (user.settings) user.settings.emailVerified = true;
+    } else if (user.role === 'admin') {
+      user.role = 'user';
     }
     return user;
   };

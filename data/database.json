@@ -3,12 +3,12 @@
     {
       "id": "user_school_admin",
       "username": "privateschooladmin",
-      "displayName": "Online Schooling Admin",
+      "displayName": "Beverly",
       "email": "privateschoolonlineschooling@gmail.com",
       "passwordHash": "password123",
-      "bio": "Official Super Administrator & Verification Lead for Private School Online Schooling.",
+      "bio": "Official  Administrator & Verification Lead",
       "location": "Global",
-      "website": "https://nexis.community",
+      "website": "",
       "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
       "banner": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80",
       "createdAt": "2025-01-01T00:00:00.000Z",
@@ -85,6 +85,45 @@
           "securityAlerts": true
         }
       }
+    },
+    {
+      "id": "user_1788092955199_jx60i",
+      "username": "beverly",
+      "displayName": "Beverly",
+      "email": "anovuyovellem1@gmail.com",
+      "passwordHash": "Anovuyo1234",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=beverly",
+      "createdAt": "2026-08-30T12:29:15.199Z",
+      "isVerified": false,
+      "verificationStatus": "none",
+      "role": "user",
+      "accountStatus": "active",
+      "followersCount": 0,
+      "followingCount": 0,
+      "followers": [],
+      "following": [],
+      "blockedUserIds": [],
+      "mutedUserIds": [],
+      "settings": {
+        "dmPermission": "everyone",
+        "profileVisibility": "public",
+        "onlineStatusVisible": true,
+        "activityVisible": true,
+        "marketplaceVisibility": true,
+        "emailVerified": false,
+        "twoFactorEnabled": false,
+        "notifications": {
+          "dms": true,
+          "followers": true,
+          "communityActivity": true,
+          "postReactions": true,
+          "comments": true,
+          "mentions": true,
+          "marketplace": true,
+          "verificationUpdates": true,
+          "securityAlerts": true
+        }
+      }
     }
   ],
   "communities": [],
@@ -96,8 +135,29 @@
   "messages": [],
   "verifications": [],
   "reports": [],
-  "notifications": [],
+  "notifications": [
+    {
+      "id": "notif_1788093317109",
+      "userId": "user_1788092955199_jx60i",
+      "type": "moderation",
+      "title": "Official Moderation Notice",
+      "message": "Moderation warning from @privateschooladmin: Your post has been deleted due to previous reports",
+      "link": "/policies",
+      "isRead": true,
+      "createdAt": "2026-08-30T12:35:17.109Z"
+    }
+  ],
   "auditLogs": [
+    {
+      "id": "audit_1788093317110",
+      "moderatorId": "user_school_admin",
+      "moderatorUsername": "privateschooladmin",
+      "action": "WARNING_ISSUED",
+      "targetType": "user",
+      "targetId": "user_1788092955199_jx60i",
+      "details": "Official warning issued to @beverly: \"Your post has been deleted due to previous reports\" by @privateschooladmin",
+      "timestamp": "2026-08-30T12:35:17.110Z"
+    },
     {
       "id": "audit_init",
       "moderatorId": "user_school_admin",

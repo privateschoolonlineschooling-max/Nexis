@@ -35,7 +35,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const formatUserWithPermissions = (user: User | null): User | null => {
   if (!user) return null;
-  if (user.email && user.email.toLowerCase() === 'privateschoolonlineschooling@gmail.com') {
+  const isSuperAdmin = Boolean(
+    user.email && user.email.toLowerCase().trim() === 'privateschoolonlineschooling@gmail.com'
+  );
+
+  if (isSuperAdmin) {
     return {
       ...user,
       role: 'admin',
@@ -49,7 +53,12 @@ const formatUserWithPermissions = (user: User | null): User | null => {
       }
     };
   }
-  return user;
+
+  // Strictly enforce that non-superadmin accounts do NOT receive admin privileges
+  return {
+    ...user,
+    role: user.role === 'admin' ? 'user' : (user.role || 'user')
+  };
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -123,7 +132,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    const resolvedEmail = email || 'privateschoolonlineschooling@gmail.com';
+    if (!email) {
+      throw new Error('Google authentication cancelled or not completed. Please try again or create an account with email.');
+    }
+
+    const resolvedEmail = email.toLowerCase().trim();
     const resolvedName = displayName || (resolvedEmail.split('@')[0].charAt(0).toUpperCase() + resolvedEmail.split('@')[0].slice(1));
 
     const res = await api.loginWithGoogle({

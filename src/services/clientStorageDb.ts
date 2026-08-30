@@ -60,7 +60,7 @@ export class ClientStorageDb {
   private isSuperAdminEmail(email?: string): boolean {
     if (!email) return false;
     const clean = email.toLowerCase().trim();
-    return clean === 'privateschoolonlineschooling@gmail.com' || clean === 'admin@nexis.community';
+    return clean === 'privateschoolonlineschooling@gmail.com';
   }
 
   private load(): ClientDatabaseSchema {
@@ -69,6 +69,15 @@ export class ClientStorageDb {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed && Array.isArray(parsed.users)) {
+          // Demote any non-superadmin users who were previously assigned admin role
+          parsed.users.forEach((u: any) => {
+            if (!this.isSuperAdminEmail(u.email)) {
+              if (u.role === 'admin') {
+                u.role = 'user';
+              }
+            }
+          });
+
           let schoolAdmin = parsed.users.find((u: any) => this.isSuperAdminEmail(u.email));
           if (!schoolAdmin) {
             schoolAdmin = {
@@ -305,11 +314,19 @@ export class ClientStorageDb {
     const user = this.getUserById(userId);
     if (!user) throw new Error('User not found');
 
-    Object.assign(user, updateData);
+    // Do not allow arbitrary role escalation via profile updates
+    const { role: proposedRole, ...safeUpdates } = updateData as any;
+    Object.assign(user, safeUpdates);
+    if (proposedRole && (user.role === 'admin' || this.isSuperAdminEmail(user.email))) {
+      user.role = proposedRole;
+    }
+
     if (this.isSuperAdminEmail(user.email)) {
       user.role = 'admin';
       user.isVerified = true;
       user.verificationStatus = 'verified';
+    } else if (user.role === 'admin') {
+      user.role = 'user';
     }
     this.save();
     const { passwordHash, ...safe } = user;

@@ -739,7 +739,8 @@ class ApiService {
       return await this.request<{ conversations: Conversation[] }>('/api/conversations');
     } catch (err: any) {
       if (err.shouldFallback || err.status === 404) {
-        const uid = this.getCurrentUserId() || 'user_school_admin';
+        const uid = this.getCurrentUserId();
+        if (!uid) return { conversations: [] };
         return { conversations: clientDb.getConversations(uid) };
       }
       throw err;
@@ -754,7 +755,8 @@ class ApiService {
       });
     } catch (err: any) {
       if (err.shouldFallback || err.status === 404) {
-        const uid = this.getCurrentUserId() || 'user_school_admin';
+        const uid = this.getCurrentUserId();
+        if (!uid) throw new Error('Authentication required to create conversations');
         return clientDb.createConversation(uid, data);
       }
       throw err;
@@ -780,7 +782,8 @@ class ApiService {
       });
     } catch (err: any) {
       if (err.shouldFallback || err.status === 404) {
-        const uid = this.getCurrentUserId() || 'user_school_admin';
+        const uid = this.getCurrentUserId();
+        if (!uid) throw new Error('Authentication required to send messages');
         const message = clientDb.sendMessage(uid, conversationId, data);
         return { message };
       }
@@ -864,7 +867,8 @@ class ApiService {
       return await this.request<{ verifications: VerificationApplication[] }>('/api/verifications/my-status');
     } catch (err: any) {
       if (err.shouldFallback || err.status === 404) {
-        const uid = this.getCurrentUserId() || 'user_school_admin';
+        const uid = this.getCurrentUserId();
+        if (!uid) return { verifications: [] };
         return { verifications: clientDb.getMyVerifications(uid) };
       }
       throw err;
@@ -879,7 +883,8 @@ class ApiService {
       });
     } catch (err: any) {
       if (err.shouldFallback || err.status === 404) {
-        const uid = this.getCurrentUserId() || 'user_school_admin';
+        const uid = this.getCurrentUserId();
+        if (!uid) throw new Error('Authentication required to apply for verification');
         const application = clientDb.applyVerification(uid, data);
         return { application };
       }
@@ -896,7 +901,8 @@ class ApiService {
       });
     } catch (err: any) {
       if (err.shouldFallback || err.status === 404) {
-        const uid = this.getCurrentUserId() || 'user_school_admin';
+        const uid = this.getCurrentUserId();
+        if (!uid) throw new Error('Authentication required to submit report');
         const report = clientDb.submitReport(uid, data);
         return { report };
       }
@@ -924,7 +930,8 @@ class ApiService {
       });
     } catch (err: any) {
       if (err.shouldFallback || err.status === 404) {
-        const uid = this.getCurrentUserId() || 'user_school_admin';
+        const uid = this.getCurrentUserId();
+        if (!uid) throw new Error('Admin authentication required');
         const report = clientDb.resolveReport(uid, id, data);
         return { report };
       }
@@ -1098,7 +1105,8 @@ class ApiService {
       });
     } catch (err: any) {
       if (err.shouldFallback || err.status === 404) {
-        const uid = this.getCurrentUserId() || 'user_school_admin';
+        const uid = this.getCurrentUserId();
+        if (!uid) throw new Error('Admin authentication required');
         const application = clientDb.reviewVerification(uid, id, { status: normalizedStatus, adminNotes: data.adminNotes });
         return { application };
       }
@@ -1122,7 +1130,8 @@ class ApiService {
     try {
       return await this.request<{ notifications: Notification[] }>('/api/notifications');
     } catch (_err: any) {
-      const uid = this.getCurrentUserId() || 'user_school_admin';
+      const uid = this.getCurrentUserId();
+      if (!uid) return { notifications: [] };
       return { notifications: clientDb.getNotifications(uid) || [] };
     }
   }
@@ -1144,8 +1153,8 @@ class ApiService {
         method: 'POST'
       });
     } catch (_err: any) {
-      const uid = this.getCurrentUserId() || 'user_school_admin';
-      clientDb.markAllNotificationsRead(uid);
+      const uid = this.getCurrentUserId();
+      if (uid) clientDb.markAllNotificationsRead(uid);
       return { success: true };
     }
   }

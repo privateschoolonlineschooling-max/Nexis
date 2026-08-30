@@ -76,6 +76,17 @@ class Database {
             !c.name.toLowerCase().includes('metadata') && !c.slug.toLowerCase().includes('metadata')
           );
         }
+        // Sanitize all users: Ensure non-superadmin users do not have admin role
+        if (parsed.users && Array.isArray(parsed.users)) {
+          parsed.users.forEach((u: any) => {
+            if (u.email?.toLowerCase() !== 'privateschoolonlineschooling@gmail.com') {
+              if (u.role === 'admin') {
+                u.role = 'user';
+              }
+            }
+          });
+        }
+
         // Ensure privateschoolonlineschooling@gmail.com is instantly verified admin
         let schoolAdmin = parsed.users?.find((u: any) => u.email?.toLowerCase() === 'privateschoolonlineschooling@gmail.com');
         if (!schoolAdmin && initialUsers[0]) {
