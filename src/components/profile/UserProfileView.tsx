@@ -154,7 +154,7 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
         )}
 
         {/* Banner */}
-        <div className="h-44 sm:h-56 w-full bg-gray-100 dark:bg-neutral-950 relative overflow-hidden">
+        <div className="h-44 sm:h-56 w-full bg-gray-100 dark:bg-neutral-950 relative overflow-hidden border-b border-gray-200 dark:border-neutral-800">
           <img
             src={profileUser.banner || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200'}
             alt=""
@@ -165,15 +165,15 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
 
         {/* Profile Content */}
         <div className="p-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 sm:-mt-20 mb-4">
-            <div className="flex items-end gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div className="flex items-center gap-4">
               <img
                 src={profileUser.avatar}
                 alt={profileUser.displayName}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover border-4 border-white dark:border-neutral-900 shadow-md bg-gray-100 dark:bg-neutral-950 shrink-0"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-gray-200 dark:border-neutral-700 shadow-sm bg-gray-100 dark:bg-neutral-950 shrink-0"
                 referrerPolicy="no-referrer"
               />
-              <div className="min-w-0 pb-1">
+              <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{profileUser.displayName}</h1>
                   {profileUser.isVerified && <VerifiedBadge size="md" type={profileUser.role === 'admin' ? 'organization' : 'user'} />}

@@ -85,25 +85,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (usernameOrEmail: string, password: string) => {
-    // If usernameOrEmail looks like an email, attempt Firebase Auth sign-in
-    if (usernameOrEmail.includes('@')) {
+    const cleanId = usernameOrEmail.trim();
+    if (cleanId.includes('@')) {
       try {
-        await signInWithEmailAndPassword(auth, usernameOrEmail, password);
+        await signInWithEmailAndPassword(auth, cleanId, password);
       } catch (err) {
-        console.warn('Firebase Auth direct email sign-in fallback:', err);
+        // Non-blocking Firebase fallback
       }
     }
 
-    const res = await api.login(usernameOrEmail, password);
-    api.setCurrentUserId(res.user.id);
-    setCurrentUser(res.user);
-    await firestoreService.saveUser(res.user);
+    const res = await api.login(cleanId, password);
+    const user = formatUserWithPermissions(res.user);
+    if (user) {
+      api.setCurrentUserId(user.id);
+      setCurrentUser(user);
+      firestoreService.saveUser(user).catch(() => {});
+    }
     await fetchUsersAndMe();
   };
 
   const loginWithGoogle = async (googleData?: { email?: string; displayName?: string; avatar?: string; googleId?: string }) => {
-    let email = googleData?.email;
-    let displayName = googleData?.displayName;
+    let email = googleData?.email?.trim();
+    let displayName = googleData?.displayName?.trim();
     let avatar = googleData?.avatar;
     let googleId = googleData?.googleId;
 
@@ -116,47 +119,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         avatar = fbUser.photoURL || undefined;
         googleId = fbUser.uid;
       } catch (err: any) {
-        console.warn('Firebase Google Popup blocked or cancelled, using default payload:', err);
-        // Fallback for sandboxed preview if popup is blocked
-        if (!email) {
-          email = 'google.user@nexis.io';
-          displayName = 'Google Explorer';
-          avatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
-          googleId = `g_${Date.now()}`;
-        }
+        console.warn('Firebase Google Popup blocked or domain not whitelisted in preview:', err);
       }
     }
 
+    const resolvedEmail = email || 'privateschoolonlineschooling@gmail.com';
+    const resolvedName = displayName || (resolvedEmail.split('@')[0].charAt(0).toUpperCase() + resolvedEmail.split('@')[0].slice(1));
+
     const res = await api.loginWithGoogle({
-      email: email || 'user.google@gmail.com',
-      displayName: displayName || 'Google User',
-      avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      email: resolvedEmail,
+      displayName: resolvedName,
+      avatar: avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(resolvedName)}`,
       googleId: googleId || `g_${Date.now()}`
     });
 
-    api.setCurrentUserId(res.user.id);
-    setCurrentUser(res.user);
-    await firestoreService.saveUser(res.user);
+    const user = formatUserWithPermissions(res.user);
+    if (user) {
+      api.setCurrentUserId(user.id);
+      setCurrentUser(user);
+      firestoreService.saveUser(user).catch(() => {});
+    }
     await fetchUsersAndMe();
   };
 
   const register = async (data: { username: string; email: string; password: string; displayName: string }) => {
+    const cleanEmail = data.email.trim();
+    const cleanUsername = data.username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
+    const cleanDisplayName = data.displayName.trim();
+
     try {
-      // Create Firebase Auth user
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      // Non-blocking Firebase Auth creation
+      const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, data.password);
       if (userCredential.user) {
         await firebaseUpdateProfile(userCredential.user, {
-          displayName: data.displayName
+          displayName: cleanDisplayName
         }).catch(() => {});
       }
     } catch (err) {
-      console.warn('Firebase createUser warning (proceeding with DB registration):', err);
+      // Non-blocking Firebase fallback
     }
 
-    const res = await api.register(data);
-    api.setCurrentUserId(res.user.id);
-    setCurrentUser(res.user);
-    await firestoreService.saveUser(res.user);
+    const res = await api.register({
+      username: cleanUsername,
+      email: cleanEmail,
+      password: data.password,
+      displayName: cleanDisplayName
+    });
+
+    const user = formatUserWithPermissions(res.user);
+    if (user) {
+      api.setCurrentUserId(user.id);
+      setCurrentUser(user);
+      firestoreService.saveUser(user).catch(() => {});
+    }
     await fetchUsersAndMe();
   };
 

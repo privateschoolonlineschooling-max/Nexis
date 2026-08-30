@@ -978,27 +978,49 @@ async function startServer() {
         targetSlugOrUsername,
         category,
         statement,
+        additionalNotes,
         officialLinks,
+        evidenceLinks,
         documentUrl,
         documentType
       } = req.body;
 
-      if (!category || !statement) {
+      const finalStatement = statement || additionalNotes;
+      if (!category || !finalStatement) {
         return res.status(400).json({ error: 'Category and statement of authenticity are required' });
+      }
+
+      const finalLinks = Array.isArray(officialLinks) 
+        ? officialLinks 
+        : Array.isArray(evidenceLinks) 
+        ? evidenceLinks 
+        : [];
+
+      let finalTargetName = targetName;
+      let finalTargetSlug = targetSlugOrUsername;
+      let finalTargetId = targetId || user.id;
+
+      if (targetType === 'community' && targetId) {
+        const comm = db.getCommunityById(targetId) || db.getCommunityBySlug(targetSlugOrUsername || targetId);
+        if (comm) {
+          finalTargetId = comm.id;
+          finalTargetName = comm.name;
+          finalTargetSlug = comm.slug;
+        }
       }
 
       const newApp: VerificationApplication = {
         id: `verif_${Date.now()}`,
         targetType: targetType || 'user',
-        targetId: targetId || user.id,
-        targetName: targetName || user.displayName,
-        targetSlugOrUsername: targetSlugOrUsername || user.username,
+        targetId: finalTargetId,
+        targetName: finalTargetName || (targetType === 'community' ? 'Community' : user.displayName),
+        targetSlugOrUsername: finalTargetSlug || (targetType === 'community' ? 'community' : user.username),
         applicantId: user.id,
         applicantUsername: user.username,
         applicantEmail: user.email,
         category,
-        statement: statement.trim(),
-        officialLinks: officialLinks || [],
+        statement: finalStatement.trim(),
+        officialLinks: finalLinks,
         documentUrl: documentUrl || 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=400',
         documentType: documentType || 'Government ID / Entity Registration Proof',
         status: 'pending',
@@ -1105,6 +1127,56 @@ async function startServer() {
       const user = db.unbanUser(req.params.id, moderatorId);
       if (!user) return res.status(404).json({ error: 'User not found' });
       res.json({ user, message: 'User unbanned successfully' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/moderation/users/:id/activity', (req, res) => {
+    try {
+      const activity = db.getUserActivity(req.params.id);
+      if (!activity) return res.status(404).json({ error: 'User not found' });
+      res.json(activity);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/moderation/users/:id/verify', (req, res) => {
+    try {
+      const moderatorId = getAuthUserId(req);
+      const { isVerified = true, category = 'individual' } = req.body;
+      const user = db.setUserVerification(req.params.id, isVerified, category, moderatorId);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      res.json({ user, message: isVerified ? 'Verified badge awarded' : 'Verification badge revoked' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/moderation/users/:id/role', (req, res) => {
+    try {
+      const moderatorId = getAuthUserId(req);
+      const { role } = req.body;
+      if (!['admin', 'moderator', 'user'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid role' });
+      }
+      const user = db.setUserRole(req.params.id, role, moderatorId);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      res.json({ user, message: `User role updated to ${role}` });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/moderation/users/:id/warn', (req, res) => {
+    try {
+      const moderatorId = getAuthUserId(req);
+      const { reason } = req.body;
+      if (!reason) return res.status(400).json({ error: 'Warning reason is required' });
+      const success = db.sendUserWarning(req.params.id, reason, moderatorId);
+      if (!success) return res.status(404).json({ error: 'User not found' });
+      res.json({ success, message: 'Warning notice sent to user' });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }

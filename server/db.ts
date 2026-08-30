@@ -220,6 +220,130 @@ class Database {
     return safeUser as User;
   }
 
+  setUserVerification(userId: string, isVerified: boolean, category?: 'creator' | 'business' | 'organization' | 'public_figure' | 'community_leader', moderatorId?: string | null): User | null {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) return null;
+
+    user.isVerified = isVerified;
+    user.verificationStatus = isVerified ? 'verified' : 'none';
+    if (isVerified) {
+      user.verificationCategory = category || 'creator';
+    } else {
+      user.verificationCategory = undefined;
+    }
+
+    const mod = moderatorId ? this.data.users.find(u => u.id === moderatorId) : null;
+    this.addAuditLog({
+      id: `audit_${Date.now()}`,
+      moderatorId: moderatorId || 'system',
+      moderatorUsername: mod?.username || 'admin',
+      action: isVerified ? 'VERIFICATION_GRANTED' : 'VERIFICATION_REVOKED',
+      targetType: 'user',
+      targetId: userId,
+      details: isVerified 
+        ? `Verified badge granted (${category || 'individual'}) to @${user.username} by @${mod?.username || 'admin'}`
+        : `Verified badge revoked from @${user.username} by @${mod?.username || 'admin'}`,
+      timestamp: new Date().toISOString()
+    });
+
+    this.createNotification({
+      id: `notif_${Date.now()}`,
+      userId: user.id,
+      type: 'verification',
+      title: isVerified ? 'Verification Badge Awarded!' : 'Verification Status Update',
+      message: isVerified
+        ? `Your account (@${user.username}) has been verified with an authentic badge by platform administration.`
+        : `Your verification status has been updated by administration.`,
+      link: `/profile/${user.username}`,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    });
+
+    this.save();
+    const { passwordHash, ...safeUser } = user;
+    return safeUser as User;
+  }
+
+  setUserRole(userId: string, role: 'admin' | 'moderator' | 'user', moderatorId?: string | null): User | null {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) return null;
+
+    const oldRole = user.role;
+    user.role = role;
+
+    const mod = moderatorId ? this.data.users.find(u => u.id === moderatorId) : null;
+    this.addAuditLog({
+      id: `audit_${Date.now()}`,
+      moderatorId: moderatorId || 'system',
+      moderatorUsername: mod?.username || 'admin',
+      action: 'ROLE_CHANGED',
+      targetType: 'user',
+      targetId: userId,
+      details: `Role changed from ${oldRole} to ${role} for @${user.username} by @${mod?.username || 'admin'}`,
+      timestamp: new Date().toISOString()
+    });
+
+    this.save();
+    const { passwordHash, ...safeUser } = user;
+    return safeUser as User;
+  }
+
+  sendUserWarning(userId: string, warningReason: string, moderatorId?: string | null): boolean {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) return false;
+
+    const mod = moderatorId ? this.data.users.find(u => u.id === moderatorId) : null;
+    this.createNotification({
+      id: `notif_${Date.now()}`,
+      userId: user.id,
+      type: 'moderation',
+      title: 'Official Moderation Notice',
+      message: `Moderation warning from @${mod?.username || 'staff'}: ${warningReason}`,
+      link: '/policies',
+      isRead: false,
+      createdAt: new Date().toISOString()
+    });
+
+    this.addAuditLog({
+      id: `audit_${Date.now()}`,
+      moderatorId: moderatorId || 'system',
+      moderatorUsername: mod?.username || 'admin',
+      action: 'WARNING_ISSUED',
+      targetType: 'user',
+      targetId: userId,
+      details: `Official warning issued to @${user.username}: "${warningReason}" by @${mod?.username || 'admin'}`,
+      timestamp: new Date().toISOString()
+    });
+
+    this.save();
+    return true;
+  }
+
+  getUserActivity(userId: string) {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) return null;
+
+    const { passwordHash, ...safeUser } = user;
+    const posts = this.data.posts.filter(p => p.authorId === userId);
+    const comments = this.data.comments.filter(c => c.authorId === userId);
+    const listings = this.data.listings.filter(l => l.sellerId === userId);
+    const ownedCommunities = this.data.communities.filter(c => (c.creatorId === userId || (c as any).ownerId === userId));
+    const joinedCommunities = this.data.communities.filter(c => c.members?.some(m => m.userId === userId));
+    const reportsAgainst = this.data.reports.filter(r => r.targetId === userId || (r.category === 'post' && posts.some(p => p.id === r.targetId)) || (r.category === 'listing' && listings.some(l => l.id === r.targetId)));
+    const auditLogs = this.data.auditLogs.filter(a => a.targetId === userId || a.moderatorId === userId);
+
+    return {
+      user: safeUser,
+      posts,
+      comments,
+      listings,
+      ownedCommunities,
+      joinedCommunities,
+      reportsAgainst,
+      auditLogs
+    };
+  }
+
   followUser(followerId: string, targetId: string): { following: boolean; followersCount: number } {
     const follower = this.data.users.find(u => u.id === followerId);
     const target = this.data.users.find(u => u.id === targetId);
@@ -1029,22 +1153,22 @@ class Database {
     app.reviewedBy = reviewerId;
     app.reviewedAt = new Date().toISOString();
 
-    const isApproved = status === 'verified';
+    const isApproved = (status as string) === 'verified' || (status as string) === 'approved';
 
     if (app.targetType === 'user') {
       const user = this.data.users.find(u => u.id === app.targetId);
       if (user) {
         user.isVerified = isApproved;
-        user.verificationStatus = status;
+        user.verificationStatus = isApproved ? 'verified' : 'rejected';
         if (isApproved) {
-          user.verificationCategory = app.category;
+          user.verificationCategory = app.category || 'creator';
         }
       }
     } else {
       const comm = this.data.communities.find(c => c.id === app.targetId);
       if (comm) {
         comm.isVerified = isApproved;
-        comm.verificationStatus = status;
+        comm.verificationStatus = isApproved ? 'verified' : 'rejected';
       }
     }
 

@@ -6,6 +6,7 @@ import { Community, Post, User } from '../../types/index';
 import { VerifiedBadge } from '../common/VerifiedBadge';
 import { PostCard } from '../feed/PostCard';
 import { CreatePostModal } from '../feed/CreatePostModal';
+import { CommunityVerificationModal } from './CommunityVerificationModal';
 import { 
   Users, 
   Globe, 
@@ -46,6 +47,7 @@ export const CommunityDetailView: React.FC<CommunityDetailViewProps> = ({
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'feed' | 'rules' | 'members'>('feed');
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const isAdminOrMod = currentUser?.role === 'admin' || currentUser?.role === 'moderator';
@@ -222,6 +224,17 @@ export const CommunityDetailView: React.FC<CommunityDetailViewProps> = ({
                 <span>Delete Community</span>
               </button>
             )}
+
+            {!community.isVerified && (isCommunityOwner || isAdminOrMod) && (
+              <button
+                id="btn-request-verification-banner"
+                onClick={() => setIsVerificationModalOpen(true)}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Request Verification Badge</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -256,25 +269,42 @@ export const CommunityDetailView: React.FC<CommunityDetailViewProps> = ({
 
         {/* Profile Info */}
         <div className="p-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 sm:-mt-20 mb-4">
-            <div className="flex items-end gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div className="flex items-center gap-4">
               <img
                 src={community.avatar}
                 alt={community.name}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover border-4 border-white dark:border-neutral-900 shadow-md bg-gray-100 dark:bg-neutral-950 shrink-0"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-gray-200 dark:border-neutral-700 shadow-sm bg-gray-100 dark:bg-neutral-950 shrink-0"
                 referrerPolicy="no-referrer"
               />
-              <div className="min-w-0 pb-1">
+              <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{community.name}</h1>
-                  {community.isVerified && <VerifiedBadge size="md" type="organization" />}
+                  {community.isVerified ? (
+                    <VerifiedBadge size="md" type="organization" />
+                  ) : community.verificationStatus === 'pending' ? (
+                    <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">
+                      Audit Pending
+                    </span>
+                  ) : null}
                 </div>
                 <span className="text-xs text-blue-600 dark:text-blue-400 font-mono">c/{community.slug}</span>
               </div>
             </div>
 
             {currentUser && (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                {!community.isVerified && (isCommunityOwner || canModerate) && (
+                  <button
+                    id="btn-request-verification-header"
+                    onClick={() => setIsVerificationModalOpen(true)}
+                    className="px-3.5 py-2.5 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Request Badge</span>
+                  </button>
+                )}
+
                 <button
                   onClick={handleToggleJoin}
                   className={`px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition ${
@@ -489,6 +519,14 @@ export const CommunityDetailView: React.FC<CommunityDetailViewProps> = ({
         onPostCreated={loadCommunityData}
         communities={[community]}
         initialCommunityId={community.id}
+      />
+
+      {/* Request Community Verification Modal */}
+      <CommunityVerificationModal
+        community={community}
+        isOpen={isVerificationModalOpen}
+        onClose={() => setIsVerificationModalOpen(false)}
+        onSubmitted={loadCommunityData}
       />
     </div>
   );

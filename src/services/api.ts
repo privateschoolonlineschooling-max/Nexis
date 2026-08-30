@@ -49,18 +49,27 @@ class ApiService {
       headers['x-user-id'] = userId;
     }
 
-    const res = await fetch(endpoint, { ...options, headers });
-    if (!res.ok) {
-      let errMsg = `Request failed: ${res.statusText}`;
-      try {
-        const errorData = await res.json();
-        errMsg = errorData.error || errMsg;
-      } catch (e) {
-        // ignore
+    try {
+      const res = await fetch(endpoint, { ...options, headers });
+      if (!res.ok) {
+        let errMsg = `Request failed (${res.status}): ${res.statusText || 'Unknown error'}`;
+        try {
+          const errorData = await res.json();
+          if (errorData && errorData.error) {
+            errMsg = errorData.error;
+          }
+        } catch (e) {
+          // response is not JSON
+        }
+        throw new Error(errMsg);
       }
-      throw new Error(errMsg);
+      return await res.json() as Promise<T>;
+    } catch (err: any) {
+      if (err.message && !err.message.startsWith('Request failed')) {
+        throw err;
+      }
+      throw new Error(err.message || 'Network request failed. Please check your connection.');
     }
-    return res.json() as Promise<T>;
   }
 
   // --- Auth & Users ---
@@ -393,10 +402,12 @@ class ApiService {
     });
   }
 
-  async banUserAdmin(userId: string, purgeContent = true): Promise<{ user: User; message: string }> {
+  async banUserAdmin(userId: string, purgeContentOrReason: boolean | string = true): Promise<{ user: User; message: string }> {
+    const purgeContent = typeof purgeContentOrReason === 'boolean' ? purgeContentOrReason : true;
+    const reason = typeof purgeContentOrReason === 'string' ? purgeContentOrReason : undefined;
     return this.request<{ user: User; message: string }>(`/api/moderation/users/${userId}/ban`, {
       method: 'POST',
-      body: JSON.stringify({ purgeContent })
+      body: JSON.stringify({ purgeContent, reason })
     });
   }
 
@@ -429,10 +440,54 @@ class ApiService {
     return this.request<{ verifications: VerificationApplication[] }>(`/api/moderation/verifications${q}`);
   }
 
+  async getUserActivityAdmin(userId: string): Promise<{
+    user: User;
+    posts: Post[];
+    comments: Comment[];
+    listings: MarketplaceListing[];
+    ownedCommunities: Community[];
+    joinedCommunities: Community[];
+    reportsAgainst: Report[];
+    auditLogs: AuditLog[];
+  }> {
+    return this.request<{
+      user: User;
+      posts: Post[];
+      comments: Comment[];
+      listings: MarketplaceListing[];
+      ownedCommunities: Community[];
+      joinedCommunities: Community[];
+      reportsAgainst: Report[];
+      auditLogs: AuditLog[];
+    }>(`/api/moderation/users/${userId}/activity`);
+  }
+
+  async setUserVerificationAdmin(userId: string, isVerified: boolean, category?: string): Promise<{ user: User; message: string }> {
+    return this.request<{ user: User; message: string }>(`/api/moderation/users/${userId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ isVerified, category })
+    });
+  }
+
+  async setUserRoleAdmin(userId: string, role: 'admin' | 'moderator' | 'user'): Promise<{ user: User; message: string }> {
+    return this.request<{ user: User; message: string }>(`/api/moderation/users/${userId}/role`, {
+      method: 'POST',
+      body: JSON.stringify({ role })
+    });
+  }
+
+  async sendUserWarningAdmin(userId: string, reason: string): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>(`/api/moderation/users/${userId}/warn`, {
+      method: 'POST',
+      body: JSON.stringify({ reason })
+    });
+  }
+
   async reviewVerification(id: string, data: { status: VerificationStatus; adminNotes: string }): Promise<{ application: VerificationApplication }> {
+    const normalizedStatus = (data.status as string) === 'approved' ? 'verified' : data.status;
     return this.request<{ application: VerificationApplication }>(`/api/moderation/verifications/${id}/decision`, {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify({ ...data, status: normalizedStatus })
     });
   }
 

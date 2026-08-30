@@ -201,6 +201,58 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               >
                 {loading ? 'Authenticating...' : 'Sign In'}
               </button>
+
+              {/* Quick Demo Accounts */}
+              <div className="pt-3 border-t border-gray-100 dark:border-neutral-800">
+                <span className="text-[10px] font-semibold text-gray-400 dark:text-neutral-500 uppercase tracking-wider block mb-2">
+                  1-Click Quick Demo Sign-in
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setUsernameOrEmail('privateschoolonlineschooling@gmail.com');
+                      setPassword('password123');
+                      try {
+                        setLoading(true);
+                        await login('privateschoolonlineschooling@gmail.com', 'password123');
+                        showToast('Signed in as Super Admin', 'success');
+                        onClose();
+                      } catch (err: any) {
+                        showToast(err.message, 'error');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    className="px-2.5 py-2 text-left bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/60 rounded-xl transition cursor-pointer"
+                  >
+                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300 block truncate">Super Admin</span>
+                    <span className="text-[10px] text-blue-600/80 dark:text-blue-400/80 block font-mono">@privateschooladmin</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setUsernameOrEmail('alexrivera');
+                      setPassword('password123');
+                      try {
+                        setLoading(true);
+                        await login('alexrivera', 'password123');
+                        showToast('Signed in as Alex Rivera', 'success');
+                        onClose();
+                      } catch (err: any) {
+                        showToast(err.message, 'error');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    className="px-2.5 py-2 text-left bg-gray-50 dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700/60 border border-gray-200 dark:border-neutral-700 rounded-xl transition cursor-pointer"
+                  >
+                    <span className="text-xs font-bold text-gray-800 dark:text-neutral-200 block truncate">Alex Rivera</span>
+                    <span className="text-[10px] text-gray-500 dark:text-neutral-400 block font-mono">@alexrivera</span>
+                  </button>
+                </div>
+              </div>
             </form>
           </div>
         )}

@@ -84,6 +84,7 @@ export interface Community {
   category: string;
   createdAt: string;
   ownerId: string;
+  creatorId?: string;
   isVerified: boolean;
   verificationStatus: VerificationStatus;
   memberCount: number;

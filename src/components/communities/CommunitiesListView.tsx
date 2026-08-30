@@ -294,14 +294,14 @@ export const CommunitiesListView: React.FC<CommunitiesListViewProps> = ({ onSele
                 {/* Info Body */}
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center gap-3 -mt-9 mb-2">
+                    <div className="flex items-center gap-3 mb-3">
                       <img
                         src={c.avatar}
                         alt={c.name}
-                        className="w-14 h-14 rounded-2xl object-cover border-2 border-white dark:border-neutral-900 shadow-md bg-gray-100 dark:bg-neutral-950 shrink-0"
+                        className="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-neutral-700 shadow-sm bg-gray-100 dark:bg-neutral-950 shrink-0"
                         referrerPolicy="no-referrer"
                       />
-                      <div className="min-w-0 pt-6">
+                      <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <h3 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">
                             {c.name}
