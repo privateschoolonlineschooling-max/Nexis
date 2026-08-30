@@ -45,9 +45,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!currentUser) return;
     try {
       const res = await api.getNotifications();
-      setNotifications(res.notifications || []);
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
+      if (res && Array.isArray(res.notifications)) {
+        setNotifications(res.notifications);
+      }
+    } catch (_err) {
+      // Gracefully ignore transient background fetch errors
     }
   }, [currentUser]);
 
