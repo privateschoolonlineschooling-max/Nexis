@@ -54,7 +54,7 @@ export interface UserSettings {
 }
 
 export type CommunityPrivacy = 'public' | 'private' | 'restricted';
-export type CommunityRole = 'owner' | 'moderator' | 'member';
+export type CommunityRole = 'owner' | 'admin' | 'moderator' | 'member';
 
 export interface CommunityRule {
   id: string;

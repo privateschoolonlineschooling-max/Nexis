@@ -448,11 +448,8 @@ class ApiService {
       });
     } catch (err: any) {
       if (err.shouldFallback || err.status === 404) {
-        const comm = clientDb.getCommunity(id);
-        if (!comm) throw new Error('Community not found');
-        const member = comm.members?.find(m => m.userId === targetUserId);
-        if (member) member.role = role;
-        return { community: comm };
+        const community = clientDb.updateCommunityMemberRole(id, targetUserId, role);
+        return { community };
       }
       throw err;
     }

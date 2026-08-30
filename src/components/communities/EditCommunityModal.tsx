@@ -1,48 +1,51 @@
-import React, { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState, useEffect } from 'react';
 import { useNotifications } from '../../context/NotificationContext';
 import { api } from '../../services/api';
-import { CommunityPrivacy } from '../../types/index';
+import { Community, CommunityPrivacy } from '../../types/index';
 import { ImageUploadPicker } from '../common/ImageUploadPicker';
-import { X, Plus, Trash2, Users, Globe, Lock, ShieldAlert } from 'lucide-react';
+import { X, Plus, Trash2, Globe, Lock, ShieldAlert, Settings } from 'lucide-react';
 
-interface CreateCommunityModalProps {
+interface EditCommunityModalProps {
   isOpen: boolean;
+  community: Community;
   onClose: () => void;
-  onCommunityCreated: (slug: string) => void;
+  onCommunityUpdated: (updated: Community) => void;
 }
 
-export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
+export const EditCommunityModal: React.FC<EditCommunityModalProps> = ({
   isOpen,
+  community,
   onClose,
-  onCommunityCreated
+  onCommunityUpdated
 }) => {
-  const { currentUser } = useAuth();
   const { showToast } = useNotifications();
 
   const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Tech & Science');
   const [privacy, setPrivacy] = useState<CommunityPrivacy>('public');
-  const [avatar, setAvatar] = useState('https://images.unsplash.com/photo-1518770660439-4636190af475?w=200');
-  const [banner, setBanner] = useState('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200');
-  const [rules, setRules] = useState<string[]>([
-    'Be respectful and constructive in all discussions.',
-    'No spam, self-promotion, or unsolicited advertising.',
-    'Follow community safety and privacy guidelines.'
-  ]);
+  const [avatar, setAvatar] = useState('');
+  const [banner, setBanner] = useState('');
+  const [rules, setRules] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  if (!isOpen) return null;
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setName(val);
-    if (!slug || slug === name.toLowerCase().replace(/[^a-z0-9]/g, '-')) {
-      setSlug(val.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-'));
+  useEffect(() => {
+    if (community && isOpen) {
+      setName(community.name || '');
+      setDescription(community.description || '');
+      setCategory(community.category || 'Tech & Science');
+      setPrivacy(community.privacy || 'public');
+      setAvatar(community.avatar || '');
+      setBanner(community.banner || '');
+      
+      const parsedRules = (community.rules || []).map(r => 
+        typeof r === 'string' ? r : r.title || r.description
+      );
+      setRules(parsedRules.length > 0 ? parsedRules : ['Be respectful and follow safety rules']);
     }
-  };
+  }, [community, isOpen]);
+
+  if (!isOpen || !community) return null;
 
   const handleAddRule = () => {
     setRules(prev => [...prev, '']);
@@ -60,17 +63,16 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !slug.trim()) {
-      showToast('Name and unique slug are required', 'warning');
+    if (!name.trim()) {
+      showToast('Community name is required', 'warning');
       return;
     }
 
     try {
       setLoading(true);
       const validRules = rules.map(r => r.trim()).filter(Boolean);
-      const res = await api.createCommunity({
+      const res = await api.updateCommunity(community.id, {
         name: name.trim(),
-        slug: slug.trim().toLowerCase(),
         description: description.trim(),
         category,
         privacy,
@@ -79,11 +81,11 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
         rules: validRules
       });
 
-      showToast(`Community c/${res.community.slug} founded successfully!`, 'success');
-      onCommunityCreated(res.community.slug);
+      showToast('Community settings and branding updated!', 'success');
+      onCommunityUpdated(res.community);
       onClose();
     } catch (err: any) {
-      showToast(err.message || 'Failed to create community', 'error');
+      showToast(err.message || 'Failed to update community', 'error');
     } finally {
       setLoading(false);
     }
@@ -91,33 +93,33 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
 
   return (
     <div
-      id="create-community-modal-overlay"
+      id="edit-community-modal-overlay"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
     >
       <div
-        id="create-community-modal-card"
+        id="edit-community-modal-card"
         className="relative w-full max-w-2xl bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl p-6 shadow-2xl text-gray-900 dark:text-neutral-100 max-h-[90vh] overflow-y-auto"
       >
         <button
           onClick={onClose}
-          id="close-create-community-modal"
-          className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-neutral-800 transition cursor-pointer"
+          id="close-edit-community-modal"
+          className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-neutral-800 transition"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-            <Users className="w-5 h-5" />
+            <Settings className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-gray-900 dark:text-white">Create New Community</h3>
-            <p className="text-xs text-gray-500 dark:text-neutral-400">Establish an interest group, engineering circle, or creative hub</p>
+            <h3 className="text-base font-bold text-gray-900 dark:text-white">Edit Community Profile & Settings</h3>
+            <p className="text-xs text-gray-500 dark:text-neutral-400">Customize c/{community.slug} branding, banner cover, and guidelines</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Name & Slug */}
+          {/* Community Name & Privacy */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold text-gray-700 dark:text-neutral-300 block mb-1">
@@ -127,28 +129,12 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
                 type="text"
                 required
                 value={name || ''}
-                onChange={handleNameChange}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. AI & Robotics Circle"
                 className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-700 dark:text-neutral-300 block mb-1">
-                Unique Slug (c/...) *
-              </label>
-              <input
-                type="text"
-                required
-                value={slug || ''}
-                onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                placeholder="ai-robotics"
-                className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs font-mono text-blue-600 dark:text-blue-400 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
 
-          {/* Category & Privacy */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold text-gray-700 dark:text-neutral-300 block mb-1">
                 Category
@@ -167,76 +153,78 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
                 <option value="General & Lounge">General & Lounge</option>
               </select>
             </div>
+          </div>
 
-            <div>
-              <label className="text-xs font-semibold text-gray-700 dark:text-neutral-300 block mb-1">
-                Privacy
-              </label>
-              <div className="grid grid-cols-3 gap-1.5">
-                {[
-                  { value: 'public', label: 'Public', icon: Globe },
-                  { value: 'restricted', label: 'Restricted', icon: ShieldAlert },
-                  { value: 'private', label: 'Private', icon: Lock }
-                ].map((p) => {
-                  const Icon = p.icon;
-                  return (
-                    <button
-                      key={p.value}
-                      type="button"
-                      onClick={() => setPrivacy(p.value as CommunityPrivacy)}
-                      className={`py-2 px-2.5 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1 ${
-                        privacy === p.value
-                          ? 'bg-blue-50 dark:bg-blue-600/15 border-blue-500 text-blue-900 dark:text-white font-bold'
-                          : 'bg-gray-50 dark:bg-neutral-950 border-gray-200 dark:border-neutral-800 text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800 text-xs'
-                      }`}
-                    >
-                      <Icon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                      <span className="text-[11px]">{p.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+          {/* Privacy Selector */}
+          <div>
+            <label className="text-xs font-semibold text-gray-700 dark:text-neutral-300 block mb-1.5">
+              Privacy Level
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 'public', label: 'Public', desc: 'Anyone can view & join', icon: Globe },
+                { value: 'restricted', label: 'Restricted', desc: 'Anyone can view, approval to post', icon: ShieldAlert },
+                { value: 'private', label: 'Private', desc: 'Invite only', icon: Lock }
+              ].map((p) => {
+                const Icon = p.icon;
+                return (
+                  <button
+                    key={p.value}
+                    type="button"
+                    onClick={() => setPrivacy(p.value as CommunityPrivacy)}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      privacy === p.value
+                        ? 'bg-blue-50 dark:bg-blue-600/15 border-blue-500 text-blue-900 dark:text-white'
+                        : 'bg-gray-50 dark:bg-neutral-950 border-gray-200 dark:border-neutral-800 text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 mb-1 text-blue-600 dark:text-blue-400" />
+                    <div className="text-xs font-bold text-gray-900 dark:text-white">{p.label}</div>
+                    <div className="text-[10px] text-gray-500 dark:text-neutral-400 leading-tight mt-0.5">{p.desc}</div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Description */}
           <div>
             <label className="text-xs font-semibold text-gray-700 dark:text-neutral-300 block mb-1">
-              Description & Purpose *
+              Description & Purpose
             </label>
             <textarea
               required
               rows={3}
               value={description || ''}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What is this community about? Who should join and participate?"
+              placeholder="Describe what this community is about..."
               className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed"
             />
           </div>
 
-          {/* Community Profile Avatar - Direct upload / no link required */}
-          <div className="p-4 bg-gray-50 dark:bg-neutral-950/60 rounded-2xl border border-gray-200 dark:border-neutral-800">
+          {/* Community Profile Image (Avatar) - Direct upload / no link required */}
+          <div className="p-4 bg-gray-50 dark:bg-neutral-950/60 rounded-2xl border border-gray-200 dark:border-neutral-800 space-y-3">
             <ImageUploadPicker
               label="Community Profile Picture / Avatar"
               value={avatar}
               onChange={setAvatar}
               type="avatar"
-              hint="Upload an icon or profile photo from your device, or choose from styled presets"
+              hint="Upload an icon or avatar directly from your device, or choose a preset"
             />
           </div>
 
           {/* Community Banner Cover - Direct upload / no link required */}
-          <div className="p-4 bg-gray-50 dark:bg-neutral-950/60 rounded-2xl border border-gray-200 dark:border-neutral-800">
+          <div className="p-4 bg-gray-50 dark:bg-neutral-950/60 rounded-2xl border border-gray-200 dark:border-neutral-800 space-y-3">
             <ImageUploadPicker
               label="Community Banner Cover"
               value={banner}
               onChange={setBanner}
               type="banner"
-              hint="Upload a wide banner image from your device or select an aesthetic theme"
+              hint="Upload a wide banner image from your device, or choose from aesthetic presets"
             />
           </div>
 
-          {/* Community Rules */}
+          {/* Guidelines / Rules */}
           <div className="p-4 bg-gray-50 dark:bg-neutral-950/60 rounded-2xl border border-gray-200 dark:border-neutral-800 space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold text-gray-700 dark:text-neutral-300">
@@ -252,7 +240,7 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
               </button>
             </div>
 
-            <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {rules.map((rule, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <span className="text-xs font-mono text-gray-400 dark:text-neutral-500 w-4 shrink-0">{idx + 1}.</span>
@@ -262,13 +250,13 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
                     value={rule || ''}
                     onChange={(e) => handleRuleChange(idx, e.target.value)}
                     placeholder="Enter rule statement..."
-                    className="flex-1 px-3 py-1.5 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {rules.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveRule(idx)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition cursor-pointer"
+                      className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -278,7 +266,7 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200 dark:border-neutral-800">
             <button
               type="button"
@@ -292,7 +280,7 @@ export const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
               disabled={loading}
               className="px-6 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition shadow-lg shadow-blue-600/20 disabled:opacity-50 cursor-pointer"
             >
-              {loading ? 'Creating...' : 'Found Community'}
+              {loading ? 'Saving Changes...' : 'Save Community Profile'}
             </button>
           </div>
         </form>

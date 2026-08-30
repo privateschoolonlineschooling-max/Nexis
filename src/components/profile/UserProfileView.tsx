@@ -27,7 +27,8 @@ import {
   ShieldCheck,
   ArrowLeft,
   Shield,
-  ShieldAlert
+  ShieldAlert,
+  Camera
 } from 'lucide-react';
 
 interface UserProfileViewProps {
@@ -154,25 +155,47 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
         )}
 
         {/* Banner */}
-        <div className="h-44 sm:h-56 w-full bg-gray-100 dark:bg-neutral-950 relative overflow-hidden border-b border-gray-200 dark:border-neutral-800">
+        <div className="h-44 sm:h-56 w-full bg-gray-100 dark:bg-neutral-950 relative overflow-hidden border-b border-gray-200 dark:border-neutral-800 group">
           <img
             src={profileUser.banner || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200'}
             alt=""
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
+          {isSelf && (
+            <button
+              onClick={() => setIsEditOpen(true)}
+              className="absolute bottom-4 left-4 px-3 py-1.5 bg-black/75 hover:bg-black/90 backdrop-blur-md text-white rounded-xl text-xs font-medium flex items-center gap-1.5 border border-white/20 shadow-md transition cursor-pointer"
+              title="Change Profile Banner (No link required)"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>Change Banner</span>
+            </button>
+          )}
         </div>
 
         {/* Profile Content */}
         <div className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
             <div className="flex items-center gap-4">
-              <img
-                src={profileUser.avatar}
-                alt={profileUser.displayName}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-gray-200 dark:border-neutral-700 shadow-sm bg-gray-100 dark:bg-neutral-950 shrink-0"
-                referrerPolicy="no-referrer"
-              />
+              <div className="relative group shrink-0">
+                <img
+                  src={profileUser.avatar}
+                  alt={profileUser.displayName}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-gray-200 dark:border-neutral-700 shadow-sm bg-gray-100 dark:bg-neutral-950"
+                  referrerPolicy="no-referrer"
+                />
+                {isSelf && (
+                  <button
+                    onClick={() => setIsEditOpen(true)}
+                    className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 rounded-2xl flex flex-col items-center justify-center text-white text-[10px] font-semibold transition cursor-pointer"
+                    title="Change Profile Picture (No link required)"
+                  >
+                    <Camera className="w-4 h-4 mb-0.5" />
+                    <span>Edit</span>
+                  </button>
+                )}
+              </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{profileUser.displayName}</h1>

@@ -433,6 +433,62 @@ export class ClientStorageDb {
     return comm;
   }
 
+  updateCommunityMemberRole(commId: string, targetUserId: string, newRole: CommunityRole): Community {
+    const comm = this.getCommunity(commId);
+    if (!comm) throw new Error('Community not found');
+    if (!comm.members) comm.members = [];
+
+    const member = comm.members.find(m => m.userId === targetUserId);
+    if (!member) throw new Error('Member not found in community');
+
+    if (newRole === 'owner') {
+      const oldOwner = comm.members.find(m => m.userId === comm.ownerId);
+      if (oldOwner) oldOwner.role = 'admin';
+      comm.ownerId = targetUserId;
+    }
+
+    member.role = newRole;
+    this.save();
+    return comm;
+  }
+
+  banCommunityMember(commId: string, targetUserId: string): Community {
+    const comm = this.getCommunity(commId);
+    if (!comm) throw new Error('Community not found');
+    if (!comm.bannedUserIds) comm.bannedUserIds = [];
+    if (!comm.bannedUserIds.includes(targetUserId)) {
+      comm.bannedUserIds.push(targetUserId);
+    }
+    comm.members = (comm.members || []).filter(m => m.userId !== targetUserId);
+    comm.memberCount = comm.members.length;
+    this.save();
+    return comm;
+  }
+
+  muteCommunityMember(commId: string, targetUserId: string, mute: boolean): Community {
+    const comm = this.getCommunity(commId);
+    if (!comm) throw new Error('Community not found');
+    if (!comm.mutedUserIds) comm.mutedUserIds = [];
+    if (mute && !comm.mutedUserIds.includes(targetUserId)) {
+      comm.mutedUserIds.push(targetUserId);
+    } else if (!mute) {
+      comm.mutedUserIds = comm.mutedUserIds.filter(id => id !== targetUserId);
+    }
+    const member = (comm.members || []).find(m => m.userId === targetUserId);
+    if (member) member.isMuted = mute;
+    this.save();
+    return comm;
+  }
+
+  verifyCommunity(commId: string, isVerified: boolean): Community {
+    const comm = this.getCommunity(commId);
+    if (!comm) throw new Error('Community not found');
+    comm.isVerified = isVerified;
+    comm.verificationStatus = isVerified ? 'verified' : 'none';
+    this.save();
+    return comm;
+  }
+
   // --- Posts & Comments ---
   getPosts(params?: { communityId?: string; authorId?: string; tag?: string; feedType?: string }): Post[] {
     let posts = [...this.data.posts];

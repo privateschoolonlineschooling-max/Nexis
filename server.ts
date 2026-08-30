@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { db } from './server/db';
-import { User, Community, Post, MarketplaceListing, Review, DirectMessage, VerificationApplication, Report } from './src/types/index';
+import { User, Community, CommunityRole, Post, MarketplaceListing, Review, DirectMessage, VerificationApplication, Report } from './src/types/index';
 
 async function startServer() {
   const app = express();
@@ -457,10 +457,11 @@ async function startServer() {
       const comm = db.getCommunityById(id);
       if (!comm) return res.status(404).json({ error: 'Community not found' });
 
-      // Check ownership/moderator/admin permission
+      // Check ownership/admin/moderator permission
       const member = comm.members.find(m => m.userId === userId);
       const user = userId ? db.getUserById(userId) : null;
-      if (comm.ownerId !== userId && member?.role !== 'moderator' && user?.role !== 'admin') {
+      const isAuthorized = comm.ownerId === userId || member?.role === 'admin' || member?.role === 'moderator' || user?.role === 'admin';
+      if (!isAuthorized) {
         return res.status(403).json({ error: 'Not authorized to manage this community' });
       }
 
@@ -532,13 +533,27 @@ async function startServer() {
       const { id, targetUserId } = req.params;
       const { role } = req.body;
 
+      if (!['owner', 'admin', 'moderator', 'member'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid community role' });
+      }
+
       const comm = db.getCommunityById(id);
       const user = userId ? db.getUserById(userId) : null;
-      if (!comm || (comm.ownerId !== userId && user?.role !== 'admin')) {
+      if (!comm) return res.status(404).json({ error: 'Community not found' });
+
+      const isOwner = comm.ownerId === userId;
+      const isCommAdmin = comm.members.some(m => m.userId === userId && m.role === 'admin');
+      const isPlatformAdmin = user?.role === 'admin';
+
+      if (!isOwner && !isCommAdmin && !isPlatformAdmin) {
         return res.status(403).json({ error: 'Only community owners or admins can change roles' });
       }
 
-      const updated = db.updateCommunityMemberRole(id, targetUserId, role);
+      if (role === 'owner' && !isOwner && !isPlatformAdmin) {
+        return res.status(403).json({ error: 'Only current owner can transfer community ownership' });
+      }
+
+      const updated = db.updateCommunityMemberRole(id, targetUserId, role as CommunityRole);
       res.json({ community: updated });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
