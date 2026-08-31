@@ -82,6 +82,8 @@ async function startServer() {
           verificationCategory: isSuper ? 'organization' : undefined,
           role: isSuper ? 'admin' : 'user',
           accountStatus: 'active',
+          hasCompletedOnboarding: isSuper ? true : false,
+          interests: isSuper ? ['Education', 'Online Learning', 'Administration'] : [],
           followersCount: 0,
           followingCount: 0,
           followers: [],
@@ -162,6 +164,8 @@ async function startServer() {
         verificationCategory: isSuper ? 'organization' : undefined,
         role: isSuper ? 'admin' : 'user',
         accountStatus: 'active',
+        hasCompletedOnboarding: isSuper ? true : false,
+        interests: isSuper ? ['Education', 'Online Learning', 'Administration'] : [],
         followersCount: 0,
         followingCount: 0,
         followers: [],
@@ -307,8 +311,18 @@ async function startServer() {
 
   app.put('/api/auth/update-profile', (req, res) => {
     const userId = getAuthUserId(req);
-    const { displayName, bio, location, website, avatar, banner } = req.body;
-    const updated = db.updateUser(userId, { displayName, bio, location, website, avatar, banner });
+    const { displayName, bio, location, website, avatar, banner, interests, hasCompletedOnboarding } = req.body;
+    const updates: any = {};
+    if (displayName !== undefined) updates.displayName = displayName;
+    if (bio !== undefined) updates.bio = bio;
+    if (location !== undefined) updates.location = location;
+    if (website !== undefined) updates.website = website;
+    if (avatar !== undefined) updates.avatar = avatar;
+    if (banner !== undefined) updates.banner = banner;
+    if (interests !== undefined) updates.interests = interests;
+    if (hasCompletedOnboarding !== undefined) updates.hasCompletedOnboarding = hasCompletedOnboarding;
+    
+    const updated = db.updateUser(userId, updates);
     if (!updated) return res.status(404).json({ error: 'User not found' });
     res.json({ user: updated });
   });

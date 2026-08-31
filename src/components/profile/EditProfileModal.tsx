@@ -19,6 +19,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   const [avatar, setAvatar] = useState('');
   const [banner, setBanner] = useState('');
   const [website, setWebsite] = useState('');
+  const [interests, setInterests] = useState<string[]>([]);
+  const [newInterestInput, setNewInterestInput] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -29,10 +31,27 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
       setAvatar(currentUser.avatar || '');
       setBanner(currentUser.banner || '');
       setWebsite(currentUser.website || '');
+      setInterests(currentUser.interests || []);
     }
   }, [currentUser, isOpen]);
 
   if (!isOpen || !currentUser) return null;
+
+  const handleAddInterest = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = newInterestInput.trim();
+    if (!clean) return;
+    if (interests.some(i => i.toLowerCase() === clean.toLowerCase())) {
+      setNewInterestInput('');
+      return;
+    }
+    setInterests([...interests, clean]);
+    setNewInterestInput('');
+  };
+
+  const handleRemoveInterest = (tag: string) => {
+    setInterests(interests.filter(i => i !== tag));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +63,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
         location: location.trim(),
         avatar: avatar.trim(),
         banner: banner.trim(),
-        website: website.trim()
+        website: website.trim(),
+        interests: interests
       });
       showToast('Profile updated successfully', 'success');
       onClose();
@@ -142,6 +162,52 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                   className="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Interests & Topics */}
+          <div>
+            <label className="text-xs font-semibold text-gray-700 dark:text-neutral-300 block mb-1">
+              Interests & Topics
+            </label>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {interests.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-medium rounded-lg"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveInterest(tag)}
+                    className="hover:text-red-500 p-0.5 rounded-full"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newInterestInput}
+                onChange={(e) => setNewInterestInput(e.target.value)}
+                placeholder="Add topic (e.g. Technology, Design, Coding)..."
+                className="flex-1 px-3.5 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddInterest(e);
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddInterest}
+                className="px-3.5 py-2 bg-gray-100 dark:bg-neutral-800 hover:bg-blue-600 hover:text-white text-gray-700 dark:text-neutral-200 text-xs font-semibold rounded-xl border border-gray-200 dark:border-neutral-700 transition cursor-pointer"
+              >
+                Add Topic
+              </button>
             </div>
           </div>
 

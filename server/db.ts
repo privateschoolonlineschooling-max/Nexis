@@ -83,6 +83,9 @@ class Database {
               if (u.role === 'admin') {
                 u.role = 'user';
               }
+              if (u.hasCompletedOnboarding === undefined) {
+                u.hasCompletedOnboarding = false;
+              }
             }
           });
         }
@@ -99,6 +102,7 @@ class Database {
           schoolAdmin.verificationStatus = 'verified';
           schoolAdmin.verificationCategory = 'organization';
           schoolAdmin.accountStatus = 'active';
+          schoolAdmin.hasCompletedOnboarding = true;
         }
         return parsed;
       } catch (err) {

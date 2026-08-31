@@ -30,6 +30,8 @@ export interface User {
   blockedUserIds: string[];
   mutedUserIds: string[];
   settings: UserSettings;
+  hasCompletedOnboarding?: boolean;
+  interests?: string[];
 }
 
 export interface UserSettings {

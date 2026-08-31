@@ -9,6 +9,7 @@ import { MobileNav } from './components/layout/MobileNav';
 import { AuthModal } from './components/auth/AuthModal';
 import { AuthLandingView } from './components/auth/AuthLandingView';
 import { SettingsModal } from './components/settings/SettingsModal';
+import { OnboardingWizardModal } from './components/onboarding/OnboardingWizardModal';
 import { ToastContainer } from './components/common/ToastContainer';
 
 // Views
@@ -37,6 +38,14 @@ const MainAppLayout: React.FC = () => {
   // Global Modals State
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+
+  // Trigger onboarding wizard automatically for users who haven't completed onboarding
+  React.useEffect(() => {
+    if (currentUser && currentUser.hasCompletedOnboarding === false) {
+      setIsOnboardingOpen(true);
+    }
+  }, [currentUser?.id, currentUser?.hasCompletedOnboarding]);
 
   // If initial auth is still checking
   if (isLoading) {
@@ -228,6 +237,11 @@ const MainAppLayout: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      <OnboardingWizardModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
       />
 
       {/* Global Notification Toast Container */}

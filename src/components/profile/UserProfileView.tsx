@@ -358,6 +358,23 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
             </span>
           </div>
 
+          {/* User Interests / Topics */}
+          {profileUser.interests && profileUser.interests.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-4">
+              <span className="text-[11px] font-semibold text-gray-400 dark:text-neutral-500 mr-1">
+                Interests:
+              </span>
+              {profileUser.interests.map((interest) => (
+                <span
+                  key={interest}
+                  className="px-2.5 py-0.5 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 text-[11px] font-medium rounded-full"
+                >
+                  {interest}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Stats Bar */}
           <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-neutral-400 pt-3 border-t border-gray-100 dark:border-neutral-800">
             <div>

@@ -59,7 +59,9 @@ export const initialUsers: (User & { passwordHash: string })[] = [
         verificationUpdates: true,
         securityAlerts: true,
       }
-    }
+    },
+    hasCompletedOnboarding: true,
+    interests: ['Education', 'Online Learning', 'Administration']
   }
 ];
 

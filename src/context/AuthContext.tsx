@@ -22,6 +22,7 @@ interface AuthContextType {
   logout: () => void;
   switchUser: (userId: string) => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  completeOnboarding: (data: { avatar?: string; bio?: string; displayName?: string; location?: string; interests: string[] }) => Promise<void>;
   updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
   verifyEmail: () => Promise<void>;
   toggleFollow: (targetUserId: string) => Promise<boolean>;
@@ -47,6 +48,8 @@ const formatUserWithPermissions = (user: User | null): User | null => {
       verificationStatus: 'verified',
       verificationCategory: 'organization',
       accountStatus: 'active',
+      hasCompletedOnboarding: true,
+      interests: user.interests?.length ? user.interests : ['Education', 'Online Learning', 'Administration'],
       settings: {
         ...user.settings,
         emailVerified: true
@@ -57,6 +60,8 @@ const formatUserWithPermissions = (user: User | null): User | null => {
   // Strictly enforce that non-superadmin accounts do NOT receive admin privileges
   return {
     ...user,
+    hasCompletedOnboarding: user.hasCompletedOnboarding ?? false,
+    interests: user.interests || [],
     role: user.role === 'admin' ? 'user' : (user.role || 'user')
   };
 };
@@ -205,8 +210,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (data: Partial<User>) => {
     const res = await api.updateProfile(data);
-    setCurrentUser(res.user);
-    await firestoreService.saveUser(res.user);
+    const formatted = formatUserWithPermissions(res.user);
+    setCurrentUser(formatted);
+    if (formatted) {
+      await firestoreService.saveUser(formatted);
+    }
+    await fetchUsersAndMe();
+  };
+
+  const completeOnboarding = async (data: { avatar?: string; bio?: string; displayName?: string; location?: string; interests: string[] }) => {
+    const res = await api.updateProfile({
+      ...data,
+      hasCompletedOnboarding: true
+    });
+    const formatted = formatUserWithPermissions(res.user);
+    setCurrentUser(formatted);
+    if (formatted) {
+      await firestoreService.saveUser(formatted);
+    }
     await fetchUsersAndMe();
   };
 
@@ -272,6 +293,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         switchUser,
         updateProfile,
+        completeOnboarding,
         updateSettings,
         verifyEmail,
         toggleFollow,
