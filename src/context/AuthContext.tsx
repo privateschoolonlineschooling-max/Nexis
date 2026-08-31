@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserSettings } from '../types/index';
-import { api } from '../services/api';
+import { api, ApiRequestContext, ApiErrorContext } from '../services/api';
 import { 
   auth, 
   googleProvider, 
@@ -33,6 +33,53 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Helper function to safely format request body without exposing plain passwords in raw console dumps
+const sanitizeRequestBody = (body: any): any => {
+  if (!body) return body;
+  if (typeof body === 'object' && !Array.isArray(body)) {
+    const copy = { ...body };
+    if (copy.password) {
+      copy.password = '[HIDDEN_FOR_SECURITY]';
+    }
+    return copy;
+  }
+  return body;
+};
+
+// Middleware-like logging utility for intercepting API requests and capturing 405 / 500 errors
+const logApiDiagnostic = (
+  type: 'INTERCEPTOR' | 'MIDDLEWARE',
+  status: number,
+  statusText: string,
+  method: string,
+  endpoint: string,
+  headers: Record<string, string>,
+  body: any,
+  responseError: any
+) => {
+  // Only trigger on 405 (Method Not Allowed) or 500+ (Server Errors)
+  if (status === 405 || status >= 500) {
+    const errorTitle = status === 405 
+      ? `🚨 [API Client ${type}] 405 Method Not Allowed on ${method} ${endpoint}`
+      : `🔥 [API Client ${type}] ${status} Server Error on ${method} ${endpoint}`;
+
+    console.group(
+      `%c${errorTitle}`,
+      'color: #ffffff; background-color: #dc2626; font-weight: bold; padding: 3px 8px; border-radius: 4px; font-size: 11px;'
+    );
+    console.info('%c[HTTP Request Details]', 'color: #3b82f6; font-weight: bold;');
+    console.log('Method:', method);
+    console.log('Endpoint URL:', endpoint);
+    console.log('Request Headers:', headers);
+    console.log('Request Payload (Body):', sanitizeRequestBody(body));
+
+    console.info('%c[HTTP Response Details]', 'color: #f59e0b; font-weight: bold;');
+    console.log('Status Code:', `${status} (${statusText || 'Error'})`);
+    console.log('Response / Error Payload:', responseError);
+    console.groupEnd();
+  }
+};
 
 const formatUserWithPermissions = (user: User | null): User | null => {
   if (!user) return null;
@@ -94,8 +141,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Setup middleware and error logging on the API client for 405/500 diagnostics
   useEffect(() => {
+    // 1. Error interceptor callback (intercepts parsed response & errors)
+    const removeErrorInterceptor = api.addErrorInterceptor((errorCtx: ApiErrorContext) => {
+      logApiDiagnostic(
+        'INTERCEPTOR',
+        errorCtx.status,
+        errorCtx.statusText,
+        errorCtx.method,
+        errorCtx.endpoint,
+        errorCtx.headers,
+        errorCtx.body,
+        errorCtx.responseBody || errorCtx.error.message
+      );
+    });
+
+    // 2. Middleware pipeline wrapper (intercepts outgoing context and response stream)
+    const removeMiddleware = api.use(async (ctx: ApiRequestContext, next) => {
+      try {
+        const response = await next();
+        if (response.status === 405 || response.status >= 500) {
+          logApiDiagnostic(
+            'MIDDLEWARE',
+            response.status,
+            response.statusText,
+            ctx.method,
+            ctx.endpoint,
+            ctx.headers,
+            ctx.body,
+            `Response status ${response.status} returned by server`
+          );
+        }
+        return response;
+      } catch (error: any) {
+        if (error && (error.status === 405 || error.status >= 500)) {
+          logApiDiagnostic(
+            'MIDDLEWARE',
+            error.status,
+            'Request Exception',
+            ctx.method,
+            ctx.endpoint,
+            ctx.headers,
+            ctx.body,
+            error.message || error
+          );
+        }
+        throw error;
+      }
+    });
+
     fetchUsersAndMe();
+
+    return () => {
+      removeErrorInterceptor();
+      removeMiddleware();
+    };
   }, []);
 
   const login = async (usernameOrEmail: string, password: string) => {

@@ -26,8 +26,58 @@ try {
   // ignore storage error
 }
 
+export interface ApiRequestContext {
+  endpoint: string;
+  method: string;
+  headers: Record<string, string>;
+  body?: any;
+  options: RequestInit;
+}
+
+export interface ApiErrorContext {
+  endpoint: string;
+  method: string;
+  headers: Record<string, string>;
+  body?: any;
+  status: number;
+  statusText: string;
+  responseBody?: any;
+  error: Error;
+}
+
+export type ApiMiddleware = (
+  context: ApiRequestContext,
+  next: () => Promise<Response>
+) => Promise<Response>;
+
+export type ApiErrorInterceptor = (errorContext: ApiErrorContext) => void;
+
 class ApiService {
   private currentUserId: string | null = null;
+  private middlewares: ApiMiddleware[] = [];
+  private errorInterceptors: ApiErrorInterceptor[] = [];
+
+  /**
+   * Register a middleware to intercept and wrap API requests.
+   * Returns an unregister function.
+   */
+  use(middleware: ApiMiddleware): () => void {
+    this.middlewares.push(middleware);
+    return () => {
+      this.middlewares = this.middlewares.filter(m => m !== middleware);
+    };
+  }
+
+  /**
+   * Register an error interceptor listener (e.g. for logging 405/500 errors).
+   * Returns an unregister function.
+   */
+  addErrorInterceptor(interceptor: ApiErrorInterceptor): () => void {
+    this.errorInterceptors.push(interceptor);
+    return () => {
+      this.errorInterceptors = this.errorInterceptors.filter(i => i !== interceptor);
+    };
+  }
 
   setCurrentUserId(id: string | null) {
     this.currentUserId = id;
@@ -54,6 +104,7 @@ class ApiService {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const userId = this.getCurrentUserId();
+    const method = (options.method || 'GET').toUpperCase();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -64,14 +115,79 @@ class ApiService {
       headers['x-user-id'] = userId;
     }
 
-    const res = await fetch(endpoint, { ...options, headers });
+    // Safely parse body for context/logging
+    let parsedBody: any = undefined;
+    if (options.body) {
+      if (typeof options.body === 'string') {
+        try {
+          parsedBody = JSON.parse(options.body);
+        } catch {
+          parsedBody = options.body;
+        }
+      } else {
+        parsedBody = options.body;
+      }
+    }
+
+    const requestContext: ApiRequestContext = {
+      endpoint,
+      method,
+      headers,
+      body: parsedBody,
+      options
+    };
+
+    // Execute request through middleware chain if any
+    const executeFetch = async (ctx: ApiRequestContext): Promise<Response> => {
+      return await fetch(ctx.endpoint, { ...ctx.options, headers: ctx.headers });
+    };
+
+    let runPipeline = executeFetch;
+    if (this.middlewares.length > 0) {
+      runPipeline = this.middlewares.reduceRight<typeof executeFetch>(
+        (next, middleware) => (ctx) => middleware(ctx, () => next(ctx)),
+        executeFetch
+      );
+    }
+
+    let res: Response;
+    try {
+      res = await runPipeline(requestContext);
+    } catch (networkError: any) {
+      const error = networkError instanceof Error ? networkError : new Error(String(networkError));
+      (error as any).status = 0;
+      
+      // Notify error interceptors for network failures
+      const errorContext: ApiErrorContext = {
+        endpoint,
+        method,
+        headers,
+        body: parsedBody,
+        status: 0,
+        statusText: 'Network Error',
+        responseBody: error.message,
+        error
+      };
+      this.errorInterceptors.forEach(listener => {
+        try {
+          listener(errorContext);
+        } catch (e) {
+          console.error('Error in ApiErrorInterceptor:', e);
+        }
+      });
+      throw error;
+    }
+
     const contentType = res.headers.get('content-type') || '';
 
     if (!res.ok) {
       let errMsg = '';
+      let rawResponseBody: any = null;
+
       if (contentType.includes('application/json')) {
         try {
           const errorData = await res.json();
+          rawResponseBody = errorData;
           if (errorData && (errorData.error || errorData.message)) {
             errMsg = errorData.error || errorData.message;
           }
@@ -81,6 +197,7 @@ class ApiService {
       } else {
         try {
           const text = await res.text();
+          rawResponseBody = text;
           if (text && text.length < 250 && !text.includes('<!DOCTYPE') && !text.includes('<html')) {
             errMsg = text;
           }
@@ -109,6 +226,27 @@ class ApiService {
 
       const error = new Error(errMsg);
       (error as any).status = res.status;
+
+      // Dispatch to error interceptors (specifically useful for 405 and 500 debugging)
+      const errorContext: ApiErrorContext = {
+        endpoint,
+        method,
+        headers,
+        body: parsedBody,
+        status: res.status,
+        statusText: res.statusText,
+        responseBody: rawResponseBody || errMsg,
+        error
+      };
+
+      this.errorInterceptors.forEach(listener => {
+        try {
+          listener(errorContext);
+        } catch (e) {
+          console.error('Error in ApiErrorInterceptor:', e);
+        }
+      });
+
       throw error;
     }
 
