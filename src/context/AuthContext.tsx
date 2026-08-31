@@ -209,14 +209,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    const res = await api.login(cleanId, password);
-    const user = formatUserWithPermissions(res.user);
-    if (user) {
-      api.setCurrentUserId(user.id);
-      setCurrentUser(user);
-      firestoreService.saveUser(user).catch(() => {});
+    try {
+      const res = await api.login(cleanId, password);
+      const user = formatUserWithPermissions(res.user);
+      if (user) {
+        api.setCurrentUserId(user.id);
+        setCurrentUser(user);
+        firestoreService.saveUser(user).catch(() => {});
+      }
+      await fetchUsersAndMe();
+    } catch (err: any) {
+      const errMsg = typeof err === 'string'
+        ? err
+        : err?.message || (typeof err?.error === 'string' ? err.error : null) || 'Login failed. Please verify your credentials.';
+      throw new Error(errMsg);
     }
-    await fetchUsersAndMe();
   };
 
   const loginWithGoogle = async (googleData?: { email?: string; displayName?: string; avatar?: string; googleId?: string }) => {

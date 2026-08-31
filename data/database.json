@@ -266,6 +266,47 @@
           "securityAlerts": true
         }
       }
+    },
+    {
+      "id": "user_1788187758591_bigg6",
+      "username": "live_user_1",
+      "displayName": "Live User",
+      "email": "live_user1@example.com",
+      "passwordHash": "mypassword123",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=live_user_1",
+      "createdAt": "2026-08-31T14:49:18.591Z",
+      "isVerified": false,
+      "verificationStatus": "none",
+      "role": "user",
+      "accountStatus": "active",
+      "hasCompletedOnboarding": false,
+      "interests": [],
+      "followersCount": 0,
+      "followingCount": 0,
+      "followers": [],
+      "following": [],
+      "blockedUserIds": [],
+      "mutedUserIds": [],
+      "settings": {
+        "dmPermission": "everyone",
+        "profileVisibility": "public",
+        "onlineStatusVisible": true,
+        "activityVisible": true,
+        "marketplaceVisibility": true,
+        "emailVerified": false,
+        "twoFactorEnabled": false,
+        "notifications": {
+          "dms": true,
+          "followers": true,
+          "communityActivity": true,
+          "postReactions": true,
+          "comments": true,
+          "mentions": true,
+          "marketplace": true,
+          "verificationUpdates": true,
+          "securityAlerts": true
+        }
+      }
     }
   ],
   "communities": [],
@@ -278,6 +319,26 @@
   "verifications": [],
   "reports": [],
   "notifications": [
+    {
+      "id": "notif_1788187619231",
+      "userId": "user_school_admin",
+      "type": "verification",
+      "title": "Verification Badge Awarded!",
+      "message": "Your account (@privateschooladmin) has been verified with an authentic badge by platform administration.",
+      "link": "/profile/privateschooladmin",
+      "isRead": true,
+      "createdAt": "2026-08-31T14:46:59.231Z"
+    },
+    {
+      "id": "notif_1788187599558",
+      "userId": "user_school_admin",
+      "type": "verification",
+      "title": "Verification Status Update",
+      "message": "Your verification status has been updated by administration.",
+      "link": "/profile/privateschooladmin",
+      "isRead": true,
+      "createdAt": "2026-08-31T14:46:39.558Z"
+    },
     {
       "id": "notif_1788183164368",
       "userId": "user_1788092445495_qa4ml",
@@ -298,7 +359,7 @@
       "title": "New Follower",
       "message": "Beverly (@beverly) started following you.",
       "link": "/profile/beverly",
-      "isRead": false,
+      "isRead": true,
       "sourceUserId": "user_1788092955199_jx60i",
       "sourceUserName": "Beverly",
       "sourceUserAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=beverly",
@@ -316,6 +377,26 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "audit_1788187619230",
+      "moderatorId": "user_school_admin",
+      "moderatorUsername": "privateschooladmin",
+      "action": "VERIFICATION_GRANTED",
+      "targetType": "user",
+      "targetId": "user_school_admin",
+      "details": "Verified badge granted (individual) to @privateschooladmin by @privateschooladmin",
+      "timestamp": "2026-08-31T14:46:59.230Z"
+    },
+    {
+      "id": "audit_1788187599557",
+      "moderatorId": "user_school_admin",
+      "moderatorUsername": "privateschooladmin",
+      "action": "VERIFICATION_REVOKED",
+      "targetType": "user",
+      "targetId": "user_school_admin",
+      "details": "Verified badge revoked from @privateschooladmin by @privateschooladmin",
+      "timestamp": "2026-08-31T14:46:39.557Z"
+    },
     {
       "id": "audit_1788093317110",
       "moderatorId": "user_school_admin",
