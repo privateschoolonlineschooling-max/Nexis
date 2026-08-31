@@ -53,12 +53,23 @@ class Database {
   private dbPath: string;
 
   constructor() {
-    const dataDir = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-      try {
+    let dataDir = path.join(process.cwd(), 'data');
+    let canUseDataDir = false;
+    try {
+      if (!fs.existsSync(dataDir)) {
         fs.mkdirSync(dataDir, { recursive: true });
-      } catch (err) {
-        console.error('Failed to create data directory:', err);
+      }
+      canUseDataDir = true;
+    } catch {
+      // If process.cwd()/data is read-only (like Vercel serverless environment), fallback to /tmp
+      try {
+        dataDir = path.join('/tmp', 'data');
+        if (!fs.existsSync(dataDir)) {
+          fs.mkdirSync(dataDir, { recursive: true });
+        }
+        canUseDataDir = true;
+      } catch {
+        canUseDataDir = false;
       }
     }
     this.dbPath = path.join(dataDir, 'database.json');
