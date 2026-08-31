@@ -78,8 +78,36 @@ class ApiService {
         } catch (e) {
           // ignore
         }
+      } else {
+        try {
+          const text = await res.text();
+          if (text && text.length < 250 && !text.includes('<!DOCTYPE') && !text.includes('<html')) {
+            errMsg = text;
+          }
+        } catch (e) {
+          // ignore
+        }
       }
-      const error = new Error(errMsg || `Request failed (${res.status})`);
+
+      if (!errMsg) {
+        if (res.status === 405) {
+          errMsg = 'Method not allowed for this action. Please refresh or retry.';
+        } else if (res.status === 404) {
+          errMsg = 'The requested service endpoint was not found.';
+        } else if (res.status === 401) {
+          errMsg = 'Invalid credentials or session expired. Please sign in again.';
+        } else if (res.status === 403) {
+          errMsg = 'Access denied. You do not have permission for this action.';
+        } else if (res.status === 409) {
+          errMsg = 'Account or resource already exists with these details.';
+        } else if (res.status >= 500) {
+          errMsg = 'Server encountered a temporary issue. Please try again shortly.';
+        } else {
+          errMsg = `Request failed (${res.status})`;
+        }
+      }
+
+      const error = new Error(errMsg);
       (error as any).status = res.status;
       throw error;
     }

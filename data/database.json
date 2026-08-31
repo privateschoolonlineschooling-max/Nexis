@@ -17,12 +17,14 @@
       "verificationCategory": "organization",
       "role": "admin",
       "accountStatus": "active",
-      "followersCount": 0,
+      "followersCount": 1,
       "followingCount": 0,
       "rating": 5,
       "reviewCount": 0,
       "completedSales": 0,
-      "followers": [],
+      "followers": [
+        "user_1788092955199_jx60i"
+      ],
       "following": [],
       "blockedUserIds": [],
       "mutedUserIds": [],
@@ -45,7 +47,8 @@
           "verificationUpdates": true,
           "securityAlerts": true
         }
-      }
+      },
+      "hasCompletedOnboarding": true
     },
     {
       "id": "user_1788092445495_qa4ml",
@@ -59,9 +62,11 @@
       "verificationStatus": "none",
       "role": "user",
       "accountStatus": "active",
-      "followersCount": 0,
+      "followersCount": 1,
       "followingCount": 0,
-      "followers": [],
+      "followers": [
+        "user_1788092955199_jx60i"
+      ],
       "following": [],
       "blockedUserIds": [],
       "mutedUserIds": [],
@@ -84,7 +89,8 @@
           "verificationUpdates": true,
           "securityAlerts": true
         }
-      }
+      },
+      "hasCompletedOnboarding": false
     },
     {
       "id": "user_1788092955199_jx60i",
@@ -92,12 +98,66 @@
       "displayName": "Beverly",
       "email": "anovuyovellem1@gmail.com",
       "passwordHash": "Anovuyo1234",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=beverly",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
       "createdAt": "2026-08-30T12:29:15.199Z",
       "isVerified": false,
       "verificationStatus": "none",
       "role": "user",
       "accountStatus": "active",
+      "followersCount": 0,
+      "followingCount": 2,
+      "followers": [],
+      "following": [
+        "user_school_admin",
+        "user_1788092445495_qa4ml"
+      ],
+      "blockedUserIds": [],
+      "mutedUserIds": [],
+      "settings": {
+        "dmPermission": "everyone",
+        "profileVisibility": "public",
+        "onlineStatusVisible": true,
+        "activityVisible": true,
+        "marketplaceVisibility": true,
+        "emailVerified": false,
+        "twoFactorEnabled": false,
+        "notifications": {
+          "dms": true,
+          "followers": true,
+          "communityActivity": true,
+          "postReactions": true,
+          "comments": true,
+          "mentions": true,
+          "marketplace": true,
+          "verificationUpdates": true,
+          "securityAlerts": true
+        }
+      },
+      "hasCompletedOnboarding": true,
+      "bio": "Book lover.",
+      "location": "",
+      "interests": [
+        "Technology",
+        "Education",
+        "Design",
+        "Business",
+        "Gaming"
+      ]
+    },
+    {
+      "id": "user_1788183242923_z1e2t",
+      "username": "testuser99",
+      "displayName": "Test User",
+      "email": "testuser99@example.com",
+      "passwordHash": "testpassword123",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=testuser99",
+      "createdAt": "2026-08-31T13:34:02.923Z",
+      "isVerified": false,
+      "verificationStatus": "none",
+      "role": "user",
+      "accountStatus": "active",
+      "hasCompletedOnboarding": false,
+      "interests": [],
       "followersCount": 0,
       "followingCount": 0,
       "followers": [],
@@ -136,6 +196,32 @@
   "verifications": [],
   "reports": [],
   "notifications": [
+    {
+      "id": "notif_1788183164368",
+      "userId": "user_1788092445495_qa4ml",
+      "type": "follow",
+      "title": "New Follower",
+      "message": "Beverly (@beverly) started following you.",
+      "link": "/profile/beverly",
+      "isRead": false,
+      "sourceUserId": "user_1788092955199_jx60i",
+      "sourceUserName": "Beverly",
+      "sourceUserAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=beverly",
+      "createdAt": "2026-08-31T13:32:44.368Z"
+    },
+    {
+      "id": "notif_1788183163067",
+      "userId": "user_school_admin",
+      "type": "follow",
+      "title": "New Follower",
+      "message": "Beverly (@beverly) started following you.",
+      "link": "/profile/beverly",
+      "isRead": false,
+      "sourceUserId": "user_1788092955199_jx60i",
+      "sourceUserName": "Beverly",
+      "sourceUserAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=beverly",
+      "createdAt": "2026-08-31T13:32:43.067Z"
+    },
     {
       "id": "notif_1788093317109",
       "userId": "user_1788092955199_jx60i",

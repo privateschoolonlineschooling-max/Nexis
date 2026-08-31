@@ -8,7 +8,18 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Middleware
+  // CORS & Preflight Middleware
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-user-id');
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+    next();
+  });
+
+  // Body parser Middleware
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true }));
 
@@ -309,7 +320,7 @@ async function startServer() {
     res.json({ user: safeUser });
   });
 
-  app.put('/api/auth/update-profile', (req, res) => {
+  const handleUpdateProfile = (req: express.Request, res: express.Response) => {
     const userId = getAuthUserId(req);
     const { displayName, bio, location, website, avatar, banner, interests, hasCompletedOnboarding } = req.body;
     const updates: any = {};
@@ -325,9 +336,13 @@ async function startServer() {
     const updated = db.updateUser(userId, updates);
     if (!updated) return res.status(404).json({ error: 'User not found' });
     res.json({ user: updated });
-  });
+  };
 
-  app.put('/api/auth/update-settings', (req, res) => {
+  app.put('/api/auth/update-profile', handleUpdateProfile);
+  app.post('/api/auth/update-profile', handleUpdateProfile);
+  app.patch('/api/auth/update-profile', handleUpdateProfile);
+
+  const handleUpdateSettings = (req: express.Request, res: express.Response) => {
     const userId = getAuthUserId(req);
     const user = db.getUserById(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -335,7 +350,11 @@ async function startServer() {
     const newSettings = { ...user.settings, ...req.body.settings };
     const updated = db.updateUser(userId, { settings: newSettings });
     res.json({ user: updated });
-  });
+  };
+
+  app.put('/api/auth/update-settings', handleUpdateSettings);
+  app.post('/api/auth/update-settings', handleUpdateSettings);
+  app.patch('/api/auth/update-settings', handleUpdateSettings);
 
   app.post('/api/auth/verify-email', (req, res) => {
     const userId = getAuthUserId(req);
