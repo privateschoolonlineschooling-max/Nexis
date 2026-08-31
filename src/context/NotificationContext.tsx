@@ -29,9 +29,36 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+  const showToast = useCallback((message: any, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+    let cleanMessage = 'Action completed';
+    if (typeof message === 'string') {
+      cleanMessage = message;
+    } else if (message instanceof Error) {
+      cleanMessage = message.message;
+    } else if (message && typeof message.message === 'string') {
+      cleanMessage = message.message;
+    } else if (message && typeof message.error === 'string') {
+      cleanMessage = message.error;
+    } else if (message && typeof message.error?.message === 'string') {
+      cleanMessage = message.error.message;
+    } else if (message && typeof message.details === 'string') {
+      cleanMessage = message.details;
+    } else if (message && typeof message === 'object') {
+      try {
+        cleanMessage = message.message || message.reason || message.error || JSON.stringify(message);
+      } catch {
+        cleanMessage = type === 'error' ? 'An unexpected error occurred' : 'Action completed';
+      }
+    }
+
+    if (!cleanMessage || cleanMessage === '[object Object]' || cleanMessage === '{}') {
+      cleanMessage = type === 'error' 
+        ? 'Action could not be completed. Please check your information and try again.'
+        : 'Update processed successfully';
+    }
+
     const id = `toast_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    setToasts(prev => [...prev, { id, type, message }]);
+    setToasts(prev => [...prev, { id, type, message: cleanMessage }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 4000);

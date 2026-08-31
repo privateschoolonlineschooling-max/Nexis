@@ -245,26 +245,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const resolvedEmail = email.toLowerCase().trim();
     const resolvedName = displayName || (resolvedEmail.split('@')[0].charAt(0).toUpperCase() + resolvedEmail.split('@')[0].slice(1));
 
-    const res = await api.loginWithGoogle({
-      email: resolvedEmail,
-      displayName: resolvedName,
-      avatar: avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(resolvedName)}`,
-      googleId: googleId || `g_${Date.now()}`
-    });
+    try {
+      const res = await api.loginWithGoogle({
+        email: resolvedEmail,
+        displayName: resolvedName,
+        avatar: avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(resolvedName)}`,
+        googleId: googleId || `g_${Date.now()}`
+      });
 
-    const user = formatUserWithPermissions(res.user);
-    if (user) {
-      api.setCurrentUserId(user.id);
-      setCurrentUser(user);
-      firestoreService.saveUser(user).catch(() => {});
+      const user = formatUserWithPermissions(res.user);
+      if (user) {
+        api.setCurrentUserId(user.id);
+        setCurrentUser(user);
+        firestoreService.saveUser(user).catch(() => {});
+      }
+      await fetchUsersAndMe();
+    } catch (err: any) {
+      const errMsg = typeof err === 'string'
+        ? err
+        : err?.message || (typeof err?.error === 'string' ? err.error : null) || 'Google sign in failed';
+      throw new Error(errMsg);
     }
-    await fetchUsersAndMe();
   };
 
   const register = async (data: { username: string; email: string; password: string; displayName: string }) => {
-    const cleanEmail = data.email.trim();
-    const cleanUsername = data.username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
-    const cleanDisplayName = data.displayName.trim();
+    const cleanEmail = (data.email || '').toLowerCase().trim();
+    let cleanUsername = (data.username || '').toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
+    let cleanDisplayName = (data.displayName || '').trim();
+
+    if (!cleanDisplayName) cleanDisplayName = cleanUsername || 'User';
+    if (!cleanUsername) cleanUsername = cleanEmail.split('@')[0].replace(/[^a-z0-9_]/g, '') || `user_${Date.now()}`;
 
     try {
       // Non-blocking Firebase Auth creation
@@ -274,24 +284,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           displayName: cleanDisplayName
         }).catch(() => {});
       }
-    } catch (err) {
+    } catch (_err) {
       // Non-blocking Firebase fallback
     }
 
-    const res = await api.register({
-      username: cleanUsername,
-      email: cleanEmail,
-      password: data.password,
-      displayName: cleanDisplayName
-    });
+    try {
+      const res = await api.register({
+        username: cleanUsername,
+        email: cleanEmail,
+        password: data.password,
+        displayName: cleanDisplayName
+      });
 
-    const user = formatUserWithPermissions(res.user);
-    if (user) {
-      api.setCurrentUserId(user.id);
-      setCurrentUser(user);
-      firestoreService.saveUser(user).catch(() => {});
+      const user = formatUserWithPermissions(res.user);
+      if (user) {
+        api.setCurrentUserId(user.id);
+        setCurrentUser(user);
+        firestoreService.saveUser(user).catch(() => {});
+      }
+      await fetchUsersAndMe();
+    } catch (err: any) {
+      const errMsg = typeof err === 'string'
+        ? err
+        : err?.message || (typeof err?.error === 'string' ? err.error : null) || 'Registration could not be completed';
+      throw new Error(errMsg);
     }
-    await fetchUsersAndMe();
   };
 
   const logout = () => {

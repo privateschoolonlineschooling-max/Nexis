@@ -89,7 +89,10 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
       showToast('Welcome back to Nexis!', 'success');
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      showToast(err.message || 'Invalid credentials. Please verify your login details and try again.', 'error');
+      const errMsg = typeof err === 'string'
+        ? err
+        : err?.message || (typeof err?.error === 'string' ? err.error : null) || 'Invalid credentials. Please verify your login details and try again.';
+      showToast(errMsg, 'error');
     } finally {
       setLoading(false);
     }
@@ -97,7 +100,7 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
 
   const handleStandardRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regDisplayName || !regUsername || !regEmail || !regPassword) {
+    if (!regDisplayName.trim() || !regUsername.trim() || !regEmail.trim() || !regPassword) {
       showToast('Please fill in all required registration fields', 'warning');
       return;
     }
@@ -107,18 +110,27 @@ export const AuthLandingView: React.FC<AuthLandingViewProps> = ({ onSuccess }) =
       return;
     }
 
+    const cleanUsername = regUsername.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
+    if (cleanUsername.length < 3) {
+      showToast('Username must be at least 3 characters (letters, numbers, underscores only)', 'warning');
+      return;
+    }
+
     try {
       setLoading(true);
       await register({
         displayName: regDisplayName.trim(),
-        username: regUsername.toLowerCase().trim().replace(/[^a-z0-9_]/g, ''),
+        username: cleanUsername,
         email: regEmail.toLowerCase().trim(),
         password: regPassword
       });
       showToast('Account created successfully! Welcome to Nexis.', 'success');
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      showToast(err.message || 'Registration failed', 'error');
+      const errMsg = typeof err === 'string'
+        ? err
+        : err?.message || (typeof err?.error === 'string' ? err.error : null) || 'Registration could not be completed. Please try again.';
+      showToast(errMsg, 'error');
     } finally {
       setLoading(false);
     }

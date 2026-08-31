@@ -43,13 +43,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!usernameOrEmail.trim() || !password) {
+      showToast('Please enter your username/email and password', 'warning');
+      return;
+    }
     try {
       setLoading(true);
-      await login(usernameOrEmail, password);
+      await login(usernameOrEmail.trim(), password);
       showToast('Logged in successfully', 'success');
       onClose();
     } catch (err: any) {
-      showToast(err.message || 'Login failed', 'error');
+      const errMsg = typeof err === 'string'
+        ? err
+        : err?.message || (typeof err?.error === 'string' ? err.error : null) || 'Login failed. Please check your credentials.';
+      showToast(errMsg, 'error');
     } finally {
       setLoading(false);
     }
@@ -57,13 +64,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanUsername = username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
+    if (!displayName.trim() || !cleanUsername || !email.trim() || !password) {
+      showToast('Please fill in all registration fields', 'warning');
+      return;
+    }
+    if (cleanUsername.length < 3) {
+      showToast('Username must be at least 3 characters (letters, numbers, underscores only)', 'warning');
+      return;
+    }
     try {
       setLoading(true);
-      await register({ username, email, password, displayName });
+      await register({
+        username: cleanUsername,
+        email: email.toLowerCase().trim(),
+        password,
+        displayName: displayName.trim()
+      });
       showToast('Account registered successfully! Welcome to Nexis.', 'success');
       onClose();
     } catch (err: any) {
-      showToast(err.message || 'Registration failed', 'error');
+      const errMsg = typeof err === 'string'
+        ? err
+        : err?.message || (typeof err?.error === 'string' ? err.error : null) || 'Registration could not be completed. Please try again.';
+      showToast(errMsg, 'error');
     } finally {
       setLoading(false);
     }

@@ -225,6 +225,47 @@
           "securityAlerts": true
         }
       }
+    },
+    {
+      "id": "user_1788186945005_aep8q",
+      "username": "test_student",
+      "displayName": "Student Test",
+      "email": "student_test@example.com",
+      "passwordHash": "testpassword123",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=test_student",
+      "createdAt": "2026-08-31T14:35:45.005Z",
+      "isVerified": false,
+      "verificationStatus": "none",
+      "role": "user",
+      "accountStatus": "active",
+      "hasCompletedOnboarding": false,
+      "interests": [],
+      "followersCount": 0,
+      "followingCount": 0,
+      "followers": [],
+      "following": [],
+      "blockedUserIds": [],
+      "mutedUserIds": [],
+      "settings": {
+        "dmPermission": "everyone",
+        "profileVisibility": "public",
+        "onlineStatusVisible": true,
+        "activityVisible": true,
+        "marketplaceVisibility": true,
+        "emailVerified": false,
+        "twoFactorEnabled": false,
+        "notifications": {
+          "dms": true,
+          "followers": true,
+          "communityActivity": true,
+          "postReactions": true,
+          "comments": true,
+          "mentions": true,
+          "marketplace": true,
+          "verificationUpdates": true,
+          "securityAlerts": true
+        }
+      }
     }
   ],
   "communities": [],

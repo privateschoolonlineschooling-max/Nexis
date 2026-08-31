@@ -239,8 +239,33 @@ class ApiService {
         try {
           const errorData = await res.json();
           rawResponseBody = errorData;
-          if (errorData && (errorData.error || errorData.message)) {
-            errMsg = errorData.error || errorData.message;
+          if (errorData) {
+            if (typeof errorData === 'string') {
+              errMsg = errorData;
+            } else if (typeof errorData.error === 'string') {
+              errMsg = errorData.error;
+            } else if (typeof errorData.message === 'string') {
+              errMsg = errorData.message;
+            } else if (errorData.error && typeof errorData.error.message === 'string') {
+              errMsg = errorData.error.message;
+            } else if (errorData.error && typeof errorData.error.details === 'string') {
+              errMsg = errorData.error.details;
+            } else if (typeof errorData.details === 'string') {
+              errMsg = errorData.details;
+            } else if (typeof errorData.reason === 'string') {
+              errMsg = errorData.reason;
+            } else if (Array.isArray(errorData.errors) && errorData.errors.length > 0) {
+              const firstErr = errorData.errors[0];
+              errMsg = typeof firstErr === 'string' ? firstErr : firstErr.message || JSON.stringify(firstErr);
+            } else if (typeof errorData.error === 'object' && errorData.error !== null) {
+              errMsg = errorData.error.message || errorData.error.reason || errorData.error.details || JSON.stringify(errorData.error);
+            } else {
+              try {
+                errMsg = JSON.stringify(errorData);
+              } catch {
+                errMsg = '';
+              }
+            }
           }
         } catch (e) {
           // ignore
@@ -257,7 +282,7 @@ class ApiService {
         }
       }
 
-      if (!errMsg) {
+      if (!errMsg || errMsg === '[object Object]' || errMsg === '{}') {
         if (res.status === 405) {
           errMsg = 'Method not allowed for this action. Please refresh or retry.';
         } else if (res.status === 404) {
@@ -267,7 +292,9 @@ class ApiService {
         } else if (res.status === 403) {
           errMsg = 'Access denied. You do not have permission for this action.';
         } else if (res.status === 409) {
-          errMsg = 'Account or resource already exists with these details.';
+          errMsg = 'An account or resource already exists with these details. Please sign in instead.';
+        } else if (res.status === 400) {
+          errMsg = 'Please check all required registration fields and try again.';
         } else if (res.status >= 500) {
           errMsg = 'Server encountered a temporary issue. Please try again shortly.';
         } else {
@@ -275,7 +302,7 @@ class ApiService {
         }
       }
 
-      const error = new Error(errMsg);
+      const error = new Error(String(errMsg));
       (error as any).status = res.status;
 
       // Dispatch to error interceptors (specifically useful for 405 and 500 debugging)
